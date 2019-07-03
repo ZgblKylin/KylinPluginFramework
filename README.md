@@ -32,6 +32,5 @@ There's a simply example in `test` folder, which shows the features with configu
 4. Unit tests and CI support for travis, appveyor and coveralls.
 5. Other further maintenance:
    1. Operational monitoring; 
-   2. Plugin version control;
-   3. Hot plug support.
-   4. ...
+   2. Hotswap support.
+   3. ...
