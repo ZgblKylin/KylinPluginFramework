@@ -17,7 +17,7 @@ KPF(Kylin Plugin Framework) is a light weight plugin framework for Qt, free to c
   - Connect signals and slots by configuration file is also supported, just like eventbus.
   - Published event could connect to signals/slots, signals could connect to subscribed event too.
 - **Configure everything**:
-  - Object's every property could be configured
+  - QObject's every property could be configured
   - QObject's object-tree-hierarchy is also supported.
   - Object can be initialized in sub-thread by configuration, you needn't write any code about it.
 - **Component**: Separated configuration files are supported -- a `component` file is used to describe a subset of the configuration, and it behaves like a single concrete object, to be configured in other components or main configuration file.
