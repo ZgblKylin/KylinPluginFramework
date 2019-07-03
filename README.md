@@ -18,6 +18,8 @@ KPF(Kylin Plugin Framework) is a light weight plugin framework for Qt, free to c
 - QObject's object-tree-hierarchy is supported.
 - Object can be initialized in sub-thread by configuration, you needn't write any code about it.
 - Seperate configeration files are supported -- a `component` file is used to describe a subset of the configuration, and it behaves like a single concrete object, to be configured in other components or main configuration file.
+- Detailed logs.
+- Pentiful APIs for advanced user to control every behavior above.
 
 # Docs
 Only coments at present, sorry for this.
@@ -29,8 +31,10 @@ There's a simply example in `test` folder, which shows the features with configu
 1. Submit code before 2019.7.7
 2. Finish documentation with Doxygen(See [Another repository](https://zgblkylin.github.io/Cpp-Utilities/) for example).
 3. Migrate configuration file format from `json` to `xml`.
-4. Unit tests and CI support for travis, appveyor and coveralls.
-5. Other further maintenance:
-   1. Operational monitoring; 
-   2. Hotswap support.
-   3. ...
+4. Migrate log system to [log4qt](https://github.com/ZgblKylin/log4qt)(The existing logging system in KPF is prototype of my log4qt repo).
+5. Unit tests and CI support for travis, appveyor and coveralls.
+6. Other further maintenance:
+   1. Migrate log system to 
+   2. Operational monitoring; 
+   3. Hotswap support.
+   4. ...
