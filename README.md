@@ -30,4 +30,4 @@ There's a simply example in `test` folder, which shows the features with configu
 2. Finish documentation with Doxygen(See [Another repository](https://zgblkylin.github.io/Cpp-Utilities/) for example).
 3. Migrate configuration file format from `json` to `xml`.
 4. Unit tests and CI support for travis, appveyor and coveralls.
-4. Other further maintenance.
+5. Other further maintenance.
