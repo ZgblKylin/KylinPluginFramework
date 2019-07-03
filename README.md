@@ -37,7 +37,6 @@ There's a simply example in `test` folder, which shows the features with configu
 4. Migrate log system to [log4qt](https://github.com/ZgblKylin/log4qt)(The existing logging system in KPF is prototype of my log4qt repo).
 5. Unit tests and CI support for travis, appveyor and coveralls.
 6. Other further maintenance:
-   1. Migrate log system to 
-   2. Operational monitoring; 
-   3. Hotswap support.
-   4. ...
+   1. Operational monitoring; 
+   2. Hotswap support.
+   3. ...
