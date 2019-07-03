@@ -3,12 +3,12 @@
 [![LICENSE](https://img.shields.io/badge/license-MPL-green.svg)](https://www.mozilla.org/en-US/MPL/)
 [![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
 
-KPF(Kylin Plugin Framework) is a light weight plugin framework for Qt, free to cooperate with 3rd-party library without any injection.
+KPF(Kylin Plugin Framework) is a light weight plugin framework for Qt, free to cooperate with 3rd-party library without any code injection.
 
 # Features
 - **Light weight**: Only a single dll file.
 - **Dynamic load**: Load any QObject class to build your program architecture configuration file, just like building LEGO!
-- **No injection**: Any QObject classes could be supported with a single line of declaration like `Q_DECL_METATYPE`, you can write it anywhere before loading the object. So you could configure any QObject classes from 3-rd party library without any injection.
+- **No injection**: Any QObject classes could be supported with a single line of declaration like `Q_DECL_METATYPE`, you can write it anywhere before loading the object. So you could configure any QObject classes from 3-rd party library without any code injection.
 - **EventBus**: Publish/Subscribe mechanism supported to decouple sender and receiver:
   - Better performance than signals&slots.
   - Easier to write than signals&slots.
