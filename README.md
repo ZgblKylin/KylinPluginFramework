@@ -1,5 +1,9 @@
 # KylinPluginFramework
-A light weight plugin framework for Qt, free to cooperate with 3rd-party library without any injection.
+[![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
+[![LICENSE](https://img.shields.io/badge/license-MPL-green.svg)](https://www.mozilla.org/en-US/MPL/)
+[![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
+
+KPF(Kylin Plugin Framework) is a light weight plugin framework for Qt, free to cooperate with 3rd-party library without any injection.
 
 # Features
 - Dynamic loading any QObject class with configuration file, just like building LEGO
@@ -25,4 +29,5 @@ There's a simply example in `test` folder, which shows the features with configu
 1. Submit code before 2019.7.7
 2. Finish documentation with Doxygen(See [Another repository](https://zgblkylin.github.io/Cpp-Utilities/) for example).
 3. Migrate configuration file format from `json` to `xml`.
+4. Unit tests and CI support for travis, appveyor and coveralls.
 4. Other further maintenance.
