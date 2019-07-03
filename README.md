@@ -9,7 +9,7 @@ KPF(Kylin Plugin Framework) is a light weight plugin framework for Qt, free to c
 - **Light weight**: Only a single dll file.
 - **Dynamic load**: Load any QObject class to build your program architecture configuration file, just like building LEGO!
 - **No injection**: Any QObject classes could be supported with a single line of declaration like `Q_DECL_METATYPE`, you can write it anywhere before loading the object. So you could configure any QObject classes from 3-rd party library without any injection.
-- **EventBus**: Publish/Subscribe mechanism suppoted to decouple sender and receiver:
+- **EventBus**: Publish/Subscribe mechanism supported to decouple sender and receiver:
   - Better performance than signals&slots.
   - Easier to write than signals&slots.
   - Both synchronized and asynchronized events are supported, just like `Qt::DirectConnection` and `Qt::QueuedConnection`.
@@ -20,9 +20,9 @@ KPF(Kylin Plugin Framework) is a light weight plugin framework for Qt, free to c
   - Object's every property could be configured
   - QObject's object-tree-hierarchy is also supported.
   - Object can be initialized in sub-thread by configuration, you needn't write any code about it.
-- **Component**: Seperate configeration files are supported -- a `component` file is used to describe a subset of the configuration, and it behaves like a single concrete object, to be configured in other components or main configuration file.
+- **Component**: Separated configuration files are supported -- a `component` file is used to describe a subset of the configuration, and it behaves like a single concrete object, to be configured in other components or main configuration file.
 - **Powerful log system**: KPF use [log4qt](https://github.com/ZgblKylin/log4qt)(Not which one imported from log4j) to record logs.
-- **Pentiful APIs**: Advanced user can control every behaviors described above.
+- **Plentiful APIs**: Advanced user can control every behaviors described above.
 
 # Docs
 Only coments at present, sorry for this.
