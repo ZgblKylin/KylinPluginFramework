@@ -13,7 +13,8 @@ KPF(Kylin Plugin Framework) is a light weight plugin framework for Qt, free to c
   - Better performance than signals&slots.
   - Easier to write than signals&slots.
   - Both synchronized and asynchronized events are supported, just like `Qt::DirectConnection` and `Qt::QueuedConnection`.
-- Better signal&slots: Connect signals and slots by configuration file is also supported, just like eventbus.
+- **Better signal&slots**:
+  - Connect signals and slots by configuration file is also supported, just like eventbus.
   - Published event could connect to signals/slots, signals could connect to subscribed event too.
 - **Configure everything**:
   - Object's every property could be configured
