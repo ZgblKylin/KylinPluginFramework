@@ -1,0 +1,340 @@
+{
+  "_comment": [
+    "对无法使用父子对象关系嵌套组织界面的Qt界面容器进行了封装"
+  ],
+
+  "Components": {
+    "HBoxLayout": {
+      "_comment": [
+        "对QHBoxLayout进行封装，通过Items列表组织子节点",
+        "每个子节点为一个QWidget或QLayout对象",
+        "可通过Stretch属性设置拉伸比例，默认为0"
+      ],
+      "Class": "QHBoxLayout",
+      "Items": [
+        {
+          "Class": "Widget",
+          "Stretch": 1
+        },
+        {
+          "Class": "Layout"
+        }
+      ]
+    },
+
+    "VBoxLayout": {
+      "_comment": [
+        "对QVBoxLayout进行封装，通过Items列表组织子节点",
+        "每个子节点为一个QWidget或QLayout对象",
+        "可通过Stretch属性设置拉伸比例，默认为0"
+      ],
+      "Class": "QVBoxLayout",
+      "Items": [
+        {
+          "Class": "Widget",
+          "Stretch": 1
+        },
+        {
+          "Class": "Layout"
+        }
+      ]
+    },
+
+    "FormLayout": {
+      "_comment": [
+        "对QFormLayout进行封装，通过Items列表组织子节点",
+        "每个子节点中，包含Label和Field子节点",
+        "Label子节点为QWidget对象，可忽略此节点，可用QLabel封装数值",
+        "Field子节点为QWidget对象"
+      ],
+      "Class": "QFormLayout",
+      "Items": [
+        {
+          "Field": {
+            "Class": "Widget"
+          }
+        },
+        {
+          "Field": {
+            "Class": "Layout"
+          }
+        },
+        {
+          "Label": {
+            "Class": "QLabel",
+            "text": "LabelA"
+          },
+          "Field": {
+            "Class": "Widget"
+          }
+        }
+      ]
+    },
+
+    "GridLayout": {
+      "_comment": [
+        "对QFormLayout进行封装，通过Items列表组织子节点",
+        "每个子节点中，包含Label和Field子节点",
+        "Label子节点为QWidget对象，可忽略此节点",
+        "Field子节点为QWidget对象"
+      ],
+      "Class": "QGridLayout",
+      "Items": [
+        {
+          "Class": "Widget",
+          "Row": 0,
+          "Column": 0
+        },
+        {
+          "Class": "Widget",
+          "Row": 0,
+          "Column": 1
+        },
+        {
+          "Class": "Widget",
+          "Row": 1,
+          "Column": 0,
+          "ColumnSpan": 2
+        }
+      ]
+    },
+
+    "StackedLayout": {
+      "_comment": [
+        "对QStackedLayout进行封装，通过Items列表组织子节点，每个子节点为QWidget对象"
+      ],
+      "Class": "QStackedLayout",
+      "Items": [
+        {
+          "Class": "Widget"
+        },
+        {
+          "Class": "Widget"
+        }
+      ]
+    },
+
+    "StackedWidget": {
+      "_comment": [
+        "对QStackedWidget进行封装，通过Items列表组织子节点，每个子节点为QWidget对象"
+      ],
+      "Class": "QStackedWidget",
+      "Items": [
+        {
+          "Class": "Widget"
+        },
+        {
+          "Class": "Widget"
+        }
+      ]
+    },
+
+    "TabWidget": {
+      "_comment": [
+        "对QTabWidget进行封装，通过Items列表组织子节点",
+        "每个子节点为QWidget对象，并通过Tab属性指定分页标签，该属性可为布尔/数值/字符串"
+      ],
+      "Class": "QTabWidget",
+      "Items": [
+        {
+          "Class": "Widget",
+          "Tab": "Tab_1"
+        },
+        {
+          "Class": "Widget",
+          "Tab": "Tab_2"
+        }
+      ]
+    },
+
+    "ListWidget": {
+      "_comment": [
+        "对QListWidget进行封装，通过Items列表组织子节点，每个子节点为QWidget对象"
+      ],
+      "Class": "QListWidget",
+      "Items": [
+        {
+          "Class": "Widget",
+        },
+        {
+          "Class": "QLabel",
+          "text": 3.14
+        }
+      ]
+    },
+
+    "TableWidget": {
+      "_comment": [
+        "对QListWidget进行封装，通过Items列表组织子节点，每个子节点为QWidget对象",
+        "子节点需通过Row和Column属性指定所属行列"
+      ],
+      "Class": "QTableWidget",
+      "Items": [
+        {
+          "Class": "Widget",
+          "Row": 0,
+          "Column": 0
+        },
+        {
+          "Value": "Item_2",
+          "Row": 0,
+          "Column": 1
+        },
+        {
+          "Value": false,
+          "Row": 1,
+          "Column": 0
+        },
+        {
+          "Value": 3.14,
+          "Row": 1,
+          "Column": 1
+        },
+        {
+          "Value": 10086,
+          "Row": 2,
+          "Column": 0
+        }
+      ]
+    },
+
+    "MenuBar": {
+      "_comment": [
+        "对MenuBar进行封装，通过Items列表组织子节点",
+        "子节点可以是Menu/Action/Separator/Widget，通过同名属性标识",
+        "Menu和Action的属性值即为对应的显示文本",
+        "Menu允许通过Items继续嵌套",
+        "Action允许通过z在Items子节点中设置一个Menu",
+        "Menu和Action对应Menu和Action对象，对象名需通过Name属性设置",
+        "Widget类型中，通过Class属性值标识控件类名，通过Name属性指定对象名"
+      ],
+      "Class": "MenuBar",
+      "Items": [
+        {
+          "Menu": "text",
+          "Name": "menu_1",
+          "Items": [
+            {
+              "Action": "text",
+              "Name": "action_1"
+            },
+            {
+              "Separator": ""
+            },
+            {
+              "Action": "text",
+              "Name": "action_2"
+            }
+          ]
+        },
+        {
+          "Separator": ""
+        },
+        {
+          "Action": "text",
+          "Name": "action_3",
+          "Items": [
+            {
+              "Menu": "text",
+              "Name": "actionMenu",
+              "Items":[
+                {
+                  "Action": "text",
+                  "Name": "action_4"
+                },
+                {
+                  "Action": "text",
+                  "Name": "action_5"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Widget": "Widget",
+          "Name": "widget_1"
+        }
+      ]
+    },
+
+    "ToolBar": {
+      "_comment": [
+        "对QToolBar进行封装，通过Items列表组织子节点",
+        "子节点可以是Action/Separator/Widget，通过同名属性标识",
+        "Menu和Action的属性值即为对应的显示文本",
+        "Menu允许通过Items继续嵌套，允许继续嵌套Menu",
+        "Action允许通过z在Items子节点中设置一个Menu",
+        "Menu和Action对应Menu和Action对象，对象名需通过Name属性设置",
+        "Widget类型中，通过Class属性值标识控件类名，通过Name属性指定对象名"
+      ],
+      "Class": "QToolBar",
+      "Items": [
+        {
+          "Action": "text",
+          "Name": "action_6",
+          "Items": [
+            {
+              "Menu": "text",
+              "Name": "menu_2",
+              "Items": [
+                {
+                  "Action": "text",
+                  "Name": "action_7"
+                },
+                {
+                  "Separator": ""
+                },
+                {
+                  "Action": "text",
+                  "Name": "action_8"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Separator": ""
+        },
+        {
+          "Action": "text",
+          "Name": "action_9"
+        },
+        {
+          "Widget": "Widget",
+          "Name": "widget_2"
+        }
+      ]
+    },
+
+    "MainWindow": {
+      "_comment": [
+        "对QMainWindow进行封装",
+        "MenuBar子节点：配置一个QMenuBar或其子类的对象",
+        "ToolBar子节点：通过array配置多个QToolBar或其子类的对象",
+        "CentralWidget子节点：配置一个QWidget或其子类的对象",
+        "StatusBar子节点：配置一个QStatusBar或其子类的对象"
+      ],
+      "Class":"QMainWindow",
+      "MenuBar": {
+        "Class": "QMenuBar"
+      },
+      "ToolBar": [
+        {
+          "Class": "QToolBar"
+        }
+      ],
+      "CentralWidget": {
+        "Class": "Widget"
+      },
+      "StatusBar": {
+        "Class": "QStatusBar"
+      },
+      "PubEvent": [
+        {
+          "Signal": "closed()",
+          "Topic": "MainWindowClosed"
+        }
+      ]
+    }
+  }
+}

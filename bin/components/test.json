@@ -1,0 +1,49 @@
+{
+  "_comment": [
+    "Components: 组件列表",
+    "  每个子对象为一个Component组件，对象名为组件名",
+    "    组件的子节点，会被替换到所有配置文件中，对应Component属性的位置",
+    "    组件替换时，不会覆盖对应位置的同名内容",
+    "    组件配置中可以嵌套引用Component",
+    "    组件子节点也可以为Array数组，此时仅可用于保存Connections"
+  ],
+
+  "Components": {
+    "test": {
+      "Class": "Test",
+      "Parent": "mainWindow",
+      "Name": "test",
+      "SubThread": true,
+      "PubEvent": [
+        {
+          "Signal": "testSignal(quint32)",
+          "Topic": "TestEvent"
+        },
+        {
+          "EventId": "TestEvent",
+          "Topic": "TestEvent"
+        }
+      ],
+      "SubEvent": [
+        {
+          "EventId": "TestSlot",
+          "Topic": "TestEvent"
+        }
+      ]
+    },
+
+    "mainWindow": {
+      "Class": "MainWindow",
+      "Name": "mainWindow",
+      "SubEvent": [
+        {
+          "EventId": "TestEvent",
+          "Topic": "TestEvent"
+        }
+      ],
+      "test": {
+        "Component": "test"
+      }
+    }
+  }
+}

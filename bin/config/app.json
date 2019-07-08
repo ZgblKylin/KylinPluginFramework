@@ -1,0 +1,115 @@
+{
+  "_comment": [
+    "启动顺序为",
+    "  加载plugins目录下所有动态库",
+    "  加载config/app.xml和components/*.xml",
+    "  将配置文件中所有component节点替换为对应组件的子节点",
+    "  顺序构造objects中所有对象和子对象",
+    "  顺序连接connections中所有信号槽",
+    "  顺序初始化对象中声明的事件发布/订阅",
+    "  顺序初始化objects中所有对象(若有init槽函数)，销毁初始化失败对象",
+    "  顺序设置所有object对象的属性(注意可能触发信号槽)",
+    "  顺序执行所有initializations中的初始化操作",
+    "退出顺序为",
+    "  逆序销毁所有objects中的对象",
+    "  卸载所有plugins目录下的动态库",
+    "Objects: 对象列表",
+    "  可任意嵌套编写，通过如下标识符之一来标识该对象为对象实例",
+    "    Class: 标识对象，值为类名",
+    "    Component: 标识组件，值为组件名，会被对应名称组件内容替换",
+    "  对象默认属性为：",
+    "    Name: 对象名，若对象位于array中，则可通过此属性指定对象名",
+    "    Parent: 父对象名，若无，则会顺序检索父节点，寻找第一个可用父对象",
+    "    SubThread: 标识该类是否会在一个子线程中初始化",
+    "    ThreadName: 子线程名称，若无则为thread_objectName",
+    "  子对象会在父对象之后构造",
+    "  对象节点所有属性会通过setProperty设置为对象属性",
+    "  对象若包含init(QJsonObject)槽函数，则在对象构造完毕后会自动执行，返回bool",
+    "  对象可以自定义子节点嵌套，整个Objects树中所有层级的子对象均会被初始化",
+    "  对象可定义事件发布/订阅，通过PubEvent/SubEvent成员array实现：",
+    "    PubEvent/SubEvent: json列表，每个成员对象为一个事件声明，对象属性如下：",
+    "      EventId：事件名称，与代码中的事件声明一致",
+    "      Signal: 信号名，可使用信号方法签名代替EventId，发送信号时自动发布事件",
+    "      Slot: 槽名称，可使用槽方法签名代替EventId，事件触发时自动执行槽方法",
+    "      Topic：事件隶属的主题名称",
+    "Connections: 信号槽列表",
+    "  每一个子对象为一个信号槽连接",
+    "  Sender/Receiver: 为发送/接收者对象名",
+    "  Signal/Slot: 为信号/槽函数名，格式与SiGNAL/SLOT宏内字符串相同",
+    "  Type: 信号槽连接方式，支持以下四种:",
+    "    Auto",
+    "    Direct",
+    "    Queued",
+    "    BlockingQueued",
+    "  子节点可以为字符串，此时将用同名Component组件替换该子节点",
+    "Initializations: 初始化列表",
+    "  每一个子对象为一个初始化配置",
+    "    Object: 对象名",
+    "    Method: 该对象的槽函数，格式与SLot宏内字符串相同"
+  ],
+
+  "Objects": [
+    {
+      "Component": "mainWindow",
+      "Name": "mainWindow",
+      "Custom": "custom"
+    },
+    {
+      "Class": "QMainWindow",
+      "Name": "mainWindow_2",
+      "CentralWidget": {
+        "Class": "QWidget",
+        "Name": "widget_mainWindow_2",
+        "layout": {
+          "Class": "QHBoxLayout",
+          "Items": [
+            {
+              "Class": "QPushButton",
+              "Name": "button1",
+              "text": "点击修改窗口标题",
+              "PubEvent": [
+                {
+                  "Signal": "clicked(bool)",
+                  "Topic": "Button1Clicked"
+                }
+              ]
+            },
+            {
+              "Class": "QPushButton",
+              "Name": "button2",
+              "text": "button 2"
+            }
+          ]
+        }
+      },
+      "SubEvent": [
+        {
+          "Slot": "setWindowTitle(QString)",
+          "Topic": "Button1Clicked"
+        }
+      ]
+    }
+  ],
+
+  "Connections": [
+  ],
+
+  "Initializations": [
+    {
+      "Object": "mainWindow",
+      "Method": "show()",
+      "Arguments": [
+      ]
+    },
+
+    {
+      "Object": "test",
+      "Method": "start()"
+    },
+
+    {
+      "Object": "mainWindow_2",
+      "Method": "show()"
+    }
+  ]
+}
