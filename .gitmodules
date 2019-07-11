@@ -1,0 +1,3 @@
+[submodule "log4qt"]
+	path = log4qt
+	url = https://github.com/ZgblKylin/log4qt.git
