@@ -1,6 +1,4 @@
-#ifndef INVOKEHELPERPRIVATE_H
-#define INVOKEHELPERPRIVATE_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 
 namespace Kpf {
@@ -33,5 +31,3 @@ private:
     std::function<void(const QVariantList&)> invokeFunction;
 };
 } //namespace Kpf
-
-#endif // INVOKEHELPERPRIVATE_H

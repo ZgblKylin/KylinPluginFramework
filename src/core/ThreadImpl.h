@@ -1,6 +1,4 @@
-#ifndef THREADIMPL_H
-#define THREADIMPL_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 #include "CommonPrivate.h"
 
@@ -20,7 +18,7 @@ private:
     ThreadImpl(bool externalThread);
 };
 
-class ThreadManagerImpl : public ThreadManager, public NotifyManager<IThreadNotifier>
+class ThreadManagerImpl : public ThreadManager, public NotifyManagerImpl<IThreadNotifier>
 {
     Q_OBJECT
 
@@ -35,8 +33,6 @@ public:
     virtual QWeakPointer<Thread> findThread(const QString& threadName) const override;
     virtual QWeakPointer<Thread> defaultThread() const override;
     virtual void removeThread(const QWeakPointer<Thread>& thread) override;
-    virtual void registerNotifier(IThreadNotifier* notifier) override;
-    virtual void unregisterNotifier(IThreadNotifier* notifier) override;
 
     void setObjectThread(QSharedPointer<ObjectImpl>& object);
 
@@ -47,5 +43,3 @@ private:
 };
 } // namespace Kpf
 #define kpfThreadImpl Kpf::ThreadManagerImpl::instance()
-
-#endif // THREADIMPL_H

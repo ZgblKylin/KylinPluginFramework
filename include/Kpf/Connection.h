@@ -1,6 +1,4 @@
-#ifndef KPF_CONNECTION_H
-#define KPF_CONNECTION_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 
 // ======== API声明 ========
@@ -29,7 +27,7 @@ struct IConnectionNotifier
     virtual void connectionRemoved(const QString& sender, const QByteArray& signal, const QString& receiver, const QByteArray& slot, Qt::ConnectionType type = Qt::AutoConnection) { Q_UNUSED(sender) Q_UNUSED(signal) Q_UNUSED(receiver) Q_UNUSED(slot) Q_UNUSED(type) }
 };
 
-class KPFSHARED_EXPORT ConnectionManager : public QObject
+class KPFSHARED_EXPORT ConnectionManager : public QObject, virtual public NotifyManager<IConnectionNotifier>
 {
     Q_OBJECT
 public:
@@ -53,17 +51,9 @@ public:
     virtual void removeConnection(QWeakPointer<Connection> connection) = 0;
     // 获取当前已建立的所有信号槽连接
     virtual QList<QWeakPointer<Connection>> connections(const QString& name) const = 0;
-
-    // 注册监听器
-    // 注册后，监听器所有权会转移至框架，由框架负责释放
-    // 取消注册后，监听器所有权返还用户
-    virtual void registerNotifier(IConnectionNotifier* notifier) = 0;
-    virtual void unregisterNotifier(IConnectionNotifier* notifier) = 0;
 };
 } // namespace Kpf
 // ======== API声明 ========
 
 #undef kpfConnection
 #define kpfConnection Kpf::ConnectionManager::instance()
-
-#endif // KPF_CONNECTION_H

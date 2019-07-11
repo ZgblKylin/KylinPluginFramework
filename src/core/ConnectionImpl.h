@@ -1,6 +1,4 @@
-#ifndef CONNECTIONIMPL_H
-#define CONNECTIONIMPL_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 #include <Kpf/Connection.h>
 #include "CommonPrivate.h"
@@ -27,7 +25,7 @@ private:
     ConnectionImpl();
 };
 
-class ConnectionManagerImpl : public ConnectionManager, public NotifyManager<IConnectionNotifier>
+class ConnectionManagerImpl : public ConnectionManager, public NotifyManagerImpl<IConnectionNotifier>
 {
     Q_OBJECT
 public:
@@ -41,13 +39,9 @@ public:
     virtual const QWeakPointer<Connection> createConnection(const QJsonObject& config) override;
     virtual void removeConnection(QWeakPointer<Connection> connection) override;
     virtual QList<QWeakPointer<Connection> > connections(const QString& name) const override;
-    virtual void registerNotifier(IConnectionNotifier* notifier) override;
-    virtual void unregisterNotifier(IConnectionNotifier* notifier) override;
 
 private:
     QMetaObject::Connection createConnection(const QString& senderName, QObject* senderPtr, QString signalName, const QString& receiverName, QObject* receiverPtr, QString slotName, Qt::ConnectionType type);
 };
 } // namespace Kpf
 #define kpfConnectionImpl Kpf::ConnectionManagerImpl::instance()
-
-#endif // CONNECTIONIMPL_H

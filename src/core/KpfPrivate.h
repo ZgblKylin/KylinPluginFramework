@@ -1,6 +1,4 @@
-#ifndef KPFPRIVATE_H
-#define KPFPRIVATE_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 #include "CommonPrivate.h"
 #include "InvokeHelperPrivate.h"
@@ -16,5 +14,3 @@
 #include "KpfCoreImpl.h"
 #include "KpfLogPrivate.h"
 #include "KWidgets.h"
-
-#endif // KPFPRIVATE_H

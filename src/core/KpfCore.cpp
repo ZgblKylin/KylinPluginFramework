@@ -1,4 +1,4 @@
-#include "KpfCoreImpl.h"
+﻿#include "KpfCoreImpl.h"
 #include "KpfPrivate.h"
 
 static const char* PATH_STR = "PATH";
@@ -174,16 +174,6 @@ bool Kpf::KpfCoreImpl::init(int argc, char *argv[])
     notify(&N::initializationFinished);
 
     return true;
-}
-
-void Kpf::KpfCoreImpl::registerNotifier(Kpf::ICoreNotifier* notifier)
-{
-    NotifyManager<N>::registerNotifier(notifier);
-}
-
-void Kpf::KpfCoreImpl::unregisterNotifier(Kpf::ICoreNotifier* notifier)
-{
-    NotifyManager<N>::unregisterNotifier(notifier);
 }
 
 Kpf::KpfCoreImpl::KpfCoreImpl()

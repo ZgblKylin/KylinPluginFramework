@@ -1,4 +1,4 @@
-#include "EventImpl.h"
+﻿#include "EventImpl.h"
 #include "KpfPrivate.h"
 
 Kpf::MetaEvent::~MetaEvent()
@@ -213,16 +213,6 @@ void Kpf::EventManagerImpl::registerSubEvent(const QString& eventName, ObjectEve
 {
     QMutexLocker locker(kpfMutex());
     registerEvent(eventName, eventObject, MetaEvent::Subscribe);
-}
-
-void Kpf::EventManagerImpl::registerNotifier(IEventNotifier* notifier)
-{
-    NotifyManager<N>::registerNotifier(notifier);
-}
-
-void Kpf::EventManagerImpl::unregisterNotifier(IEventNotifier* notifier)
-{
-    NotifyManager<N>::unregisterNotifier(notifier);
 }
 
 void Kpf::EventManagerImpl::setupObjectEvents(QSharedPointer<ObjectImpl>& object)

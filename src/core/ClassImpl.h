@@ -1,6 +1,4 @@
-#ifndef CLASSIMPL_H
-#define CLASSIMPL_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 #include <Kpf/Class.h>
 #include "CommonPrivate.h"
@@ -28,7 +26,7 @@ private:
     MetaClassImpl();
 };
 
-class ClassManagerImpl : public ClassManager, public NotifyManager<IClassNotifier>
+class ClassManagerImpl : public ClassManager, public NotifyManagerImpl<IClassNotifier>
 {
     Q_OBJECT
 public:
@@ -40,8 +38,7 @@ public:
     // ClassManager interface
     virtual QStringList availableClassNames() const override;
     virtual QWeakPointer<MetaClass> findClass(const QString& className) const override;
-    virtual void registerNotifier(IClassNotifier* notifier) override;
-    virtual void unregisterNotifier(IClassNotifier* notifier) override;
+
 protected:
     virtual void registerClass(const QString& className, QMetaObject metaObject, const std::function<void(Object*)>& constructor) override;
 
@@ -50,5 +47,3 @@ protected:
 };
 } // namespace Kpf
 #define kpfClassImpl Kpf::ClassManagerImpl::instance()
-
-#endif // CLASSIMPL_H

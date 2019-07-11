@@ -1,6 +1,4 @@
-#ifndef KPF_OBJECT_H
-#define KPF_OBJECT_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 #include <Kpf/Constants.h>
 
@@ -52,7 +50,7 @@ struct IObjectNotifier
     virtual void objectDestroyed(const QString& className, const QString& objectName) { Q_UNUSED(className) Q_UNUSED(objectName) }
 };
 
-class KPFSHARED_EXPORT ObjectManager : public QObject
+class KPFSHARED_EXPORT ObjectManager : public QObject, virtual public NotifyManager<IObjectNotifier>
 {
     Q_OBJECT
 public:
@@ -88,12 +86,6 @@ public:
 
     // 销毁对应名称的对象
     virtual void destroyObject(const QString& name) = 0;
-
-    // 注册监听器
-    // 注册后，监听器所有权会转移至框架，由框架负责释放
-    // 取消注册后，监听器所有权返还用户
-    virtual void registerNotifier(IObjectNotifier* notifier) = 0;
-    virtual void unregisterNotifier(IObjectNotifier* notifier) = 0;
 };
 } // namespace Kpf
 // ======== API声明 ========
@@ -160,5 +152,3 @@ T* ObjectManager::createObject(QJsonObject config, QObject* parent)
     return createObject<T>(config.value(TAG_NAME).toString(), config.value(TAG_CLASS).toString(), config, parent);
 }
 } // namespace Kpf
-
-#endif // KPF_OBJECT_H

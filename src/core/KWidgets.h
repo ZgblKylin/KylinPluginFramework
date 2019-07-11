@@ -1,6 +1,4 @@
-#ifndef KWIDGETS_H
-#define KWIDGETS_H
-
+﻿#pragma once
 #include <QtGui/QtGui>
 #include <QtWidgets/QtWidgets>
 #include <Kpf/Kpf.h>
@@ -269,5 +267,3 @@ KPF_REGISTER(QMessageBox)
 KPF_REGISTER(QProgressDialog)
 KPF_REGISTER(QWizard)
 KPF_REGISTER(QWizardPage)
-
-#endif // KWIDGETS_H

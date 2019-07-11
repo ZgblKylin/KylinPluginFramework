@@ -1,6 +1,4 @@
-#ifndef OBJECTIMPL_H
-#define OBJECTIMPL_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 #include "CommonPrivate.h"
 #include "Library.h"
@@ -29,7 +27,7 @@ private:
     ObjectImpl();
 };
 
-class ObjectManagerImpl : public ObjectManager, public NotifyManager<IObjectNotifier>
+class ObjectManagerImpl : public ObjectManager, public NotifyManagerImpl<IObjectNotifier>
 {
     Q_OBJECT
 public:
@@ -43,8 +41,6 @@ public:
     virtual QWeakPointer<Object> findObject(const QString& name) const override;
     virtual QWeakPointer<Object> createObject(QString name, QString className, QJsonObject config = QJsonObject(), QObject* parent = qApp) override;
     virtual void destroyObject(const QString& name) override;
-    virtual void registerNotifier(IObjectNotifier* notifier) override;
-    virtual void unregisterNotifier(IObjectNotifier* notifier) override;
 
     QWeakPointer<ObjectImpl> currentObject();
 
@@ -66,5 +62,3 @@ private:
 };
 } // namespace Kpf
 #define kpfObjectImpl Kpf::ObjectManagerImpl::instance()
-
-#endif // OBJECTIMPL_H

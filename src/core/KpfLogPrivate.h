@@ -1,6 +1,4 @@
-#ifndef KPFLOGPRIVATE_H
-#define KPFLOGPRIVATE_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 #include <Kpf/Log.h>
 #include <Kpf/Log/Processor/LogDebugOutput.h>
@@ -20,5 +18,3 @@ KPF_REGISTER_CLASS(Log::Impl::LogDisplayWidget, LogDisplayWidget)
 namespace Kpf {
 void initLogger(int argc, char* argv[]);
 } // namespace Kpf
-
-#endif // KPFLOGPRIVATE_H

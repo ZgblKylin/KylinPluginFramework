@@ -1,6 +1,4 @@
-#ifndef EVENTBUS_H
-#define EVENTBUS_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 #include "EventImpl.h"
 
@@ -27,5 +25,3 @@ protected:
     virtual bool event(QEvent* e);
 };
 } // namespace Kpf
-
-#endif // EVENTBUS_H

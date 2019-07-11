@@ -1,9 +1,4 @@
-/* EventHelper.h
- * 提供事件总线的相关API
- */
-#ifndef KPF_EVENTHELPER_H
-#define KPF_EVENTHELPER_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 #include <Kpf/InvokeHelper.h>
 #include <Kpf/KpfCore.h>
@@ -322,5 +317,3 @@ protected:
     Func f;
 };
 } // namespace Kpf
-
-#endif // KPF_EVENTHELPER_H

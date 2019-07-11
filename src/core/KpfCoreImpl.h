@@ -1,6 +1,4 @@
-#ifndef KPFCOREIMPL_H
-#define KPFCOREIMPL_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 #include <Kpf/Debugging/Debugging.h>
 #include "CommonPrivate.h"
@@ -15,7 +13,7 @@
 #include "KpfLogPrivate.h"
 
 namespace Kpf {
-class KpfCoreImpl : public KpfCore, public NotifyManager<ICoreNotifier>
+class KpfCoreImpl : public KpfCore, public NotifyManagerImpl<ICoreNotifier>
 {
 public:
     struct SignalEvent
@@ -43,8 +41,6 @@ public:
 
     // KpfCore interface
     virtual bool init(int argc, char *argv[]) override;
-    virtual void registerNotifier(ICoreNotifier* notifier) override;
-    virtual void unregisterNotifier(ICoreNotifier* notifier) override;
 
 private:
     KpfCoreImpl();
@@ -112,5 +108,3 @@ KPF_REGISTER(QThreadPool)
 KPF_REGISTER(QTimeLine)
 
 KPF_REGISTER(Debugging)
-
-#endif // KPFCOREIMPL_H

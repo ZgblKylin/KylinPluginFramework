@@ -1,4 +1,4 @@
-#include "ThreadImpl.h"
+﻿#include "ThreadImpl.h"
 #include "KpfPrivate.h"
 
 Kpf::Thread::~Thread()
@@ -103,16 +103,6 @@ void Kpf::ThreadManagerImpl::removeThread(const QWeakPointer<Thread>& t)
     if (thread) {
         threads.remove(thread->name);
     }
-}
-
-void Kpf::ThreadManagerImpl::registerNotifier(IThreadNotifier* notifier)
-{
-    NotifyManager<N>::registerNotifier(notifier);
-}
-
-void Kpf::ThreadManagerImpl::unregisterNotifier(IThreadNotifier* notifier)
-{
-    NotifyManager<N>::unregisterNotifier(notifier);
 }
 
 void Kpf::ThreadManagerImpl::setObjectThread(QSharedPointer<ObjectImpl>& object)

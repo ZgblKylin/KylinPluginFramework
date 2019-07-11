@@ -1,6 +1,4 @@
-#ifndef KPF_EVENT_H
-#define KPF_EVENT_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 
 // ======== API声明 ========
@@ -55,7 +53,7 @@ struct IEventNotifier
     virtual void postEvent(const ObjectEvent& event, const QVariantList& args) { Q_UNUSED(event) Q_UNUSED(args) }
 };
 
-class KPFSHARED_EXPORT EventManager : public QObject
+class KPFSHARED_EXPORT EventManager : public QObject, virtual public NotifyManager<IEventNotifier>
 {
     Q_OBJECT
 public:
@@ -80,17 +78,9 @@ public:
 
     virtual void registerPubEvent(const QString& eventName, ObjectEvent* eventObject) = 0;
     virtual void registerSubEvent(const QString& eventName, ObjectEvent* eventObject) = 0;
-
-    // 注册监听器
-    // 注册后，监听器所有权会转移至框架，由框架负责释放
-    // 取消注册后，监听器所有权返还用户
-    virtual void registerNotifier(IEventNotifier* notifier) = 0;
-    virtual void unregisterNotifier(IEventNotifier* notifier) = 0;
 };
 } // namespace Kpf
 // ======== API声明 ========
 
 #undef kpfEvent
 #define kpfEvent Kpf::EventManager::instance()
-
-#endif // KPF_EVENT_H

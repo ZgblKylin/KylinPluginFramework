@@ -1,4 +1,4 @@
-#include "ObjectImpl.h"
+﻿#include "ObjectImpl.h"
 #include "KpfPrivate.h"
 
 static const char* PROPERTY_KPFOBJECT = "KpfObject";
@@ -159,16 +159,6 @@ void Kpf::ObjectManagerImpl::destroyObject(const QString& name)
     }
 }
 
-void Kpf::ObjectManagerImpl::registerNotifier(IObjectNotifier* notifier)
-{
-    NotifyManager<N>::registerNotifier(notifier);
-}
-
-void Kpf::ObjectManagerImpl::unregisterNotifier(IObjectNotifier* notifier)
-{
-    NotifyManager<N>::unregisterNotifier(notifier);
-}
-
 QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::currentObject()
 {
     QMutexLocker locker(kpfMutex());
@@ -178,7 +168,7 @@ QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::currentObject()
 QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(QString name, QString className, const QJsonObject& objectConfig, Ref<Ptr<QObject>> oParent, Ref<Ptr<QWidget>> wParent)
 {
     QMutexLocker locker(kpfMutex());
-    RAII raii([this]{ currentObj.clear(); });
+    Defer raii([this]{ currentObj.clear(); });
 
     if (name.isEmpty()) {
         name = objectConfig.value(TAG_NAME).toString();

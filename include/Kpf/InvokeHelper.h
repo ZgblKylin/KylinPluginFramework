@@ -1,9 +1,4 @@
-/* InvokeHelper.h
- * 提供反射功能的封装
- */
-#ifndef KPF_INVOKEHELPER_H
-#define KPF_INVOKEHELPER_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 
 // ======== API声明 ========
@@ -86,5 +81,3 @@ QVariantList packParams(Args&&... args)
     return ret;
 }
 } // namespace Kpf
-
-#endif // KPF_INVOKEHELPER_H

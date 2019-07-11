@@ -1,6 +1,4 @@
-#ifndef KPF_TOPIC_H
-#define KPF_TOPIC_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 
 // ======== API声明 ========
@@ -40,5 +38,3 @@ public:
 
 #undef kpfTopic
 #define kpfTopic Kpf::TopicManager::instance()
-
-#endif // KPF_TOPIC_H

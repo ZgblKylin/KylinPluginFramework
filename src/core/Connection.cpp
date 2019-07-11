@@ -1,4 +1,4 @@
-#include "ConnectionImpl.h"
+﻿#include "ConnectionImpl.h"
 #include "KpfPrivate.h"
 
 Kpf::ConnectionImpl::~ConnectionImpl()
@@ -187,16 +187,6 @@ QList<QWeakPointer<Kpf::Connection>> Kpf::ConnectionManagerImpl::connections(con
         ret.append(connection.staticCast<Connection>());
     }
     return ret;
-}
-
-void Kpf::ConnectionManagerImpl::registerNotifier(Kpf::IConnectionNotifier* notifier)
-{
-    NotifyManager<N>::registerNotifier(notifier);
-}
-
-void Kpf::ConnectionManagerImpl::unregisterNotifier(Kpf::IConnectionNotifier* notifier)
-{
-    NotifyManager<N>::unregisterNotifier(notifier);
 }
 
 QMetaObject::Connection Kpf::ConnectionManagerImpl::createConnection(const QString& senderName, QObject* senderPtr, QString signalName, const QString& receiverName, QObject* receiverPtr, QString slotName, Qt::ConnectionType type)

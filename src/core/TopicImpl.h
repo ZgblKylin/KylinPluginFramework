@@ -1,6 +1,4 @@
-#ifndef TOPICPIMPL_H
-#define TOPICPIMPL_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 #include "EventImpl.h"
 
@@ -35,5 +33,3 @@ private:
 
 } // namespace Kpf
 #define kpfTopicImpl Kpf::TopicManagerImpl::instance()
-
-#endif // TOPICPIMPL_H

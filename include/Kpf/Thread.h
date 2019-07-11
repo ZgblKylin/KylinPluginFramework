@@ -1,6 +1,4 @@
-#ifndef KPF_THREAD_H
-#define KPF_THREAD_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 
 // ======== API声明 ========
@@ -33,7 +31,7 @@ struct IThreadNotifier
     virtual void threadStopped(const QString& threadName) { Q_UNUSED(threadName) }
 };
 
-class KPFSHARED_EXPORT ThreadManager : public QObject
+class KPFSHARED_EXPORT ThreadManager : public QObject, virtual public NotifyManager<IThreadNotifier>
 {
     Q_OBJECT
 public:
@@ -45,12 +43,6 @@ public:
     virtual QWeakPointer<Thread> findThread(const QString& threadName) const = 0;
     virtual QWeakPointer<Thread> defaultThread() const = 0;
     virtual void removeThread(const QWeakPointer<Thread>& thread) = 0;
-
-    // 注册监听器
-    // 注册后，监听器所有权会转移至框架，由框架负责释放
-    // 取消注册后，监听器所有权返还用户
-    virtual void registerNotifier(IThreadNotifier* notifier) = 0;
-    virtual void unregisterNotifier(IThreadNotifier* notifier) = 0;
 };
 } // namesapace Kpf
 // ======== API声明 ========
@@ -58,4 +50,3 @@ public:
 #undef kpfThread
 #define kpfThread Kpf::ThreadManager::instance()
 
-#endif // KPF_THREAD_H

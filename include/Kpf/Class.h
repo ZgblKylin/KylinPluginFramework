@@ -1,6 +1,4 @@
-#ifndef KPF_CLASS_H
-#define KPF_CLASS_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 #include <Kpf/Object.h>
 
@@ -32,7 +30,7 @@ struct IClassNotifier
     virtual void classRegistered(const QString& className) { Q_UNUSED(className) }
 };
 
-class KPFSHARED_EXPORT ClassManager : public QObject
+class KPFSHARED_EXPORT ClassManager : public QObject, virtual public NotifyManager<IClassNotifier>
 {
     Q_OBJECT
 
@@ -52,12 +50,6 @@ public:
     virtual QStringList availableClassNames() const = 0;
     // 提供类名，寻找对应的类
     virtual QWeakPointer<MetaClass> findClass(const QString& className) const = 0;
-
-    // 注册监听器
-    // 注册后，监听器所有权会转移至框架，由框架负责释放
-    // 取消注册后，监听器所有权返还用户
-    virtual void registerNotifier(IClassNotifier* notifier) = 0;
-    virtual void unregisterNotifier(IClassNotifier* notifier) = 0;
 
 protected:
     // 注册类型至框架，className为配置文件中使用的类名，constructor为返回类对象的工厂函数
@@ -102,5 +94,3 @@ inline void ClassManager::registerClass()
     registerClass<T>(T::staticMetaObject.className());
 }
 } // namesapce Kpf
-
-#endif // KPF_CLASS_H

@@ -1,13 +1,8 @@
-/* Constant.h
- * 提供框架内置的各项常量
- */
-#ifndef KPF_CONSTANTS_H
-#define KPF_CONSTANTS_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 
 namespace Kpf {
-// 所有框架内置的json关键字
+// 所有框架内置的配置文件关键字
 static const QString TAG_COMPONENTS = QStringLiteral("Components");
 static const QString TAG_COMPONENT = QStringLiteral("Component");
 static const QString TAG_OBJECTS = QStringLiteral("Objects");
@@ -54,5 +49,3 @@ static const QString FILE_APP = QStringLiteral("app.json");
 static const QString DIR_COMPONENTS = QStringLiteral("components");
 static const QString FILE_SUFFIX_JSON = QStringLiteral("json");
 } // namespace Kpf
-
-#endif // KPF_CONSTANTS_H

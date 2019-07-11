@@ -1,6 +1,4 @@
-#ifndef SIGNALSPY_H
-#define SIGNALSPY_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 
 namespace Kpf {
@@ -20,7 +18,4 @@ private:
     QByteArray signal;
     QVariantList args;
 };
-
 } // namespace Kpf
-
-#endif // SIGNALSPY_H

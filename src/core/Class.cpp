@@ -1,4 +1,4 @@
-#include "ClassImpl.h"
+﻿#include "ClassImpl.h"
 #include "KpfPrivate.h"
 
 Kpf::MetaClass::~MetaClass()
@@ -59,16 +59,6 @@ QWeakPointer<Kpf::MetaClass> Kpf::ClassManagerImpl::findClass(const QString& cla
 {
     QMutexLocker locker(kpfMutex());
     return classes.value(className);
-}
-
-void Kpf::ClassManagerImpl::registerNotifier(IClassNotifier* notifier)
-{
-    NotifyManager<N>::registerNotifier(notifier);
-}
-
-void Kpf::ClassManagerImpl::unregisterNotifier(IClassNotifier* notifier)
-{
-    NotifyManager<N>::unregisterNotifier(notifier);
 }
 
 void Kpf::ClassManagerImpl::registerClass(const QString& className, QMetaObject metaObject, const std::function<void(Object*)>& constructor)

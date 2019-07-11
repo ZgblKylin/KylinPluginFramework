@@ -1,6 +1,4 @@
-#ifndef KPF_LOG_H
-#define KPF_LOG_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 #include <Kpf/Log/Log.h>
 
@@ -34,5 +32,3 @@ for (bool accepted = Kpf::getLogEngine()->filterAcceptLogLevel(category, logLeve
 namespace Kpf {
 KPFSHARED_EXPORT Log::Impl::ILogEngine* getLogEngine();
 } // namespace Kpf
-
-#endif // KPF_LOG_H

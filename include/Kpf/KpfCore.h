@@ -1,9 +1,4 @@
-/* KpfCore.h
- * Kylin Plugin Framework框架内核API
- */
-#ifndef KPF_KPFCORE_H
-#define KPF_KPFCORE_H
-
+﻿#pragma once
 #include <Kpf/Common.h>
 #include <Kpf/Constants.h>
 #include <Kpf/Connection.h>
@@ -52,7 +47,7 @@ struct ICoreNotifier
 /**
  * @brief KpfCore类，KPF框架内核API声明
  */
-class KPFSHARED_EXPORT KpfCore
+class KPFSHARED_EXPORT KpfCore : virtual public NotifyManager<ICoreNotifier>
 {
 public:
     virtual ~KpfCore() = default;
@@ -62,17 +57,9 @@ public:
 
     // 初始化内核，加载配置文件，需要在main函数中调用
     virtual bool init(int argc, char *argv[]) = 0;
-
-    // 注册监听器
-    // 注册后，监听器所有权会转移至框架，由框架负责释放
-    // 取消注册后，监听器所有权返还用户
-    virtual void registerNotifier(ICoreNotifier* notifier) = 0;
-    virtual void unregisterNotifier(ICoreNotifier* notifier) = 0;
 };
 } // namespace Kpf
 // ======== API声明 ========
 
 #undef kpfCore
 #define kpfCore ::Kpf::KpfCore::instance()
-
-#endif // KPF_KPFCORE_H

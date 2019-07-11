@@ -1,6 +1,4 @@
-#ifndef LIBRARY_H
-#define LIBRARY_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 
 namespace Kpf {
@@ -17,5 +15,3 @@ struct Library
     QMap<QString, QWeakPointer<ObjectImpl>> objects;
 };
 } // namespace Kpf
-
-#endif // LIBRARY_H

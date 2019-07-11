@@ -1,6 +1,4 @@
-#ifndef EVENTIMPL_H
-#define EVENTIMPL_H
-
+﻿#pragma once
 #include <Kpf/Kpf.h>
 #include "CommonPrivate.h"
 #include "ObjectImpl.h"
@@ -17,7 +15,7 @@ private:
     MetaEventImpl();
 };
 
-class EventManagerImpl : public EventManager, public NotifyManager<IEventNotifier>
+class EventManagerImpl : public EventManager, public NotifyManagerImpl<IEventNotifier>
 {
     Q_OBJECT
 public:
@@ -31,8 +29,6 @@ public:
     virtual void addSubEvent(const QString& objectName, const QString& eventName, const QString& topicName, bool isSignalOrSlot = false) override;
     virtual void registerPubEvent(const QString& eventName, ObjectEvent* eventObject) override;
     virtual void registerSubEvent(const QString& eventName, ObjectEvent* eventObject) override;
-    virtual void registerNotifier(IEventNotifier* notifier) override;
-    virtual void unregisterNotifier(IEventNotifier* notifier) override;
 
     void setupObjectEvents(QSharedPointer<ObjectImpl>& object);
     void registerPubSignalEvent(QSharedPointer<ObjectImpl>& object, const QString& eventName);
@@ -41,5 +37,3 @@ public:
 };
 } // namespace Kpf
 #define kpfEventImpl Kpf::EventManagerImpl::instance()
-
-#endif // EVENTIMPL_H

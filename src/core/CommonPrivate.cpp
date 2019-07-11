@@ -1,4 +1,4 @@
-#include "CommonPrivate.h"
+﻿#include "CommonPrivate.h"
 #include "KpfPrivate.h"
 #include "KpfCoreImpl.h"
 
@@ -69,7 +69,6 @@ QString normalizedSignature(QString signature)
             appendNormalizeType(ret, typeName);
             continue;
         }
-            break;
 
         default:
             break;
