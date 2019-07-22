@@ -5,10 +5,15 @@
 #include "Library.h"
 #include "EventImpl.h"
 
+#ifdef Q_CC_MSVC
+#pragma warning(push)
+#pragma warning(disable:4250)
+#endif
+
 namespace Kpf {
 struct MetaClassImpl : public MetaClass
 {
-    virtual ~MetaClassImpl();
+    virtual ~MetaClassImpl() override;
 
     static QSharedPointer<MetaClassImpl> create(QSharedPointer<Library> library,
                                             const QString& name,
@@ -26,12 +31,12 @@ private:
     MetaClassImpl();
 };
 
-class ClassManagerImpl : public ClassManager, public NotifyManagerImpl<IClassNotifier>
+class ClassManagerImpl : public ClassManager, public NotifyManager<IClassNotifier>
 {
     Q_OBJECT
 public:
     ClassManagerImpl();
-    virtual ~ClassManagerImpl();
+    virtual ~ClassManagerImpl() override;
 
     static ClassManagerImpl& instance();
 
@@ -47,3 +52,7 @@ protected:
 };
 } // namespace Kpf
 #define kpfClassImpl Kpf::ClassManagerImpl::instance()
+
+#ifdef Q_CC_MSVC
+#pragma warning(pop)
+#endif

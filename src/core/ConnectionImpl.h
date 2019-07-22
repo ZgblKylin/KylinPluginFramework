@@ -4,10 +4,15 @@
 #include "CommonPrivate.h"
 #include "ObjectImpl.h"
 
+#ifdef Q_CC_MSVC
+#pragma warning(push)
+#pragma warning(disable:4250)
+#endif
+
 namespace Kpf {
 struct ConnectionImpl : public Connection
 {
-    virtual ~ConnectionImpl();
+    virtual ~ConnectionImpl() override;
 
     static QSharedPointer<ConnectionImpl> create(QString sender,
                                                  QByteArray signalName,
@@ -25,18 +30,18 @@ private:
     ConnectionImpl();
 };
 
-class ConnectionManagerImpl : public ConnectionManager, public NotifyManagerImpl<IConnectionNotifier>
+class ConnectionManagerImpl : public ConnectionManager, public NotifyManager<IConnectionNotifier>
 {
     Q_OBJECT
 public:
     ConnectionManagerImpl();
-    virtual ~ConnectionManagerImpl();
+    virtual ~ConnectionManagerImpl() override;
 
     static ConnectionManagerImpl& instance();
 
     // ConnectionManager interface
     virtual const QWeakPointer<Connection> createConnection(const QString& sender, const QString& signal, const QString& receiver, const QString& slot, Qt::ConnectionType type = Qt::AutoConnection) override;
-    virtual const QWeakPointer<Connection> createConnection(const QJsonObject& config) override;
+    virtual const QWeakPointer<Connection> createConnection(const QDomElement& config) override;
     virtual void removeConnection(QWeakPointer<Connection> connection) override;
     virtual QList<QWeakPointer<Connection> > connections(const QString& name) const override;
 
@@ -45,3 +50,7 @@ private:
 };
 } // namespace Kpf
 #define kpfConnectionImpl Kpf::ConnectionManagerImpl::instance()
+
+#ifdef Q_CC_MSVC
+#pragma warning(pop)
+#endif

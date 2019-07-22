@@ -3,10 +3,15 @@
 #include "CommonPrivate.h"
 #include "ObjectImpl.h"
 
+#ifdef Q_CC_MSVC
+#pragma warning(push)
+#pragma warning(disable:4250)
+#endif
+
 namespace Kpf {
 struct MetaEventImpl : public MetaEvent
 {
-    ~MetaEventImpl();
+    ~MetaEventImpl() override;
 
     static QSharedPointer<MetaEventImpl> create(Type type,
                                             const QString& name,
@@ -15,12 +20,12 @@ private:
     MetaEventImpl();
 };
 
-class EventManagerImpl : public EventManager, public NotifyManagerImpl<IEventNotifier>
+class EventManagerImpl : public EventManager, public NotifyManager<IEventNotifier>
 {
     Q_OBJECT
 public:
     EventManagerImpl();
-    virtual ~EventManagerImpl();
+    virtual ~EventManagerImpl() override;
 
     static EventManagerImpl& instance();
 
@@ -37,3 +42,7 @@ public:
 };
 } // namespace Kpf
 #define kpfEventImpl Kpf::EventManagerImpl::instance()
+
+#ifdef Q_CC_MSVC
+#pragma warning(pop)
+#endif

@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <type_traits>
 #include <QtCore/QtCore>
+#include <QtXml/QtXml>
 
 #if defined(KPF_LIBRARY)
 #  define KPFSHARED_EXPORT Q_DECL_EXPORT
@@ -10,12 +11,12 @@
 
 namespace Kpf {
 template<typename T>
-class NotifyManager
+class INotifyManager
 {
 public:
     using N = T;
 
-    virtual ~NotifyManager() = default;
+    virtual ~INotifyManager() = default;
 
     // 注册监听器
     // 注册后，监听器所有权会转移至框架，由框架负责释放
@@ -72,3 +73,5 @@ T* toBase(D* delivered)
     return ToBase<T, D>().base(delivered);
 }
 } // namesapce Kpf
+
+Q_DECLARE_METATYPE(QDomElement)

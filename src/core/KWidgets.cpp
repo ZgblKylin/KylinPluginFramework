@@ -1,17 +1,22 @@
-#include "KWidgets.h"
+﻿#include "KWidgets.h"
 #include "KpfPrivate.h"
 
-void initMargins(QLayout* layout, const QJsonObject& config)
+void initMargins(QLayout* layout, const QDomElement& config)
 {
-    QJsonValue value = config.value(TAG_MARGINS);
-    if (value.isDouble())
+    QString value = config.attribute(TAG_MARGINS);
+    if (value.isEmpty()) {
+        return;
+    }
+
+    bool ok = false;
+    int margin = value.toInt(&ok, 10);
+    if (ok)
     {
-        int margin = value.toInt();
         layout->setContentsMargins(margin, margin, margin, margin);
         return;
     }
 
-    QStringList margins = value.toString().split(',');
+    QStringList margins = value.split(',');
     switch (margins.count())
     {
     case 1:
@@ -34,22 +39,15 @@ void initMargins(QLayout* layout, const QJsonObject& config)
     }
 }
 
-QList<Kpf::Object*> initObjects(QObject* parent, const QJsonObject& config)
+QList<Kpf::Object*> initObjects(QObject* parent, const QDomElement& config)
 {
     QList<Kpf::Object*> objects;
-    if (!config.contains(TAG_ITEMS)) {
-        return objects;
-    }
-    QJsonArray array = config.value(TAG_ITEMS).toArray();
-    for (auto it = array.begin(); it != array.end(); ++it)
+    for (QDomElement child = config.firstChildElement(Kpf::TAG_CLASS);
+         !child.isNull();
+         child = child.nextSiblingElement(Kpf::TAG_CLASS))
     {
-        if (!(*it).isObject()) {
-            continue;
-        }
-        QJsonObject objectConfig = (*it).toObject();
-
         QSharedPointer<Kpf::Object> object = kpfObject
-                                             .createObject(objectConfig, parent)
+                                             .createObject(child, parent)
                                              .toStrongRef();
         if (!object) {
             continue;
@@ -66,24 +64,28 @@ QList<Kpf::Object*> initObjects(QObject* parent, const QJsonObject& config)
     return objects;
 }
 
-bool initBoxLayout(QBoxLayout* layout, const QJsonObject& config)
+bool initLayoutParent(QLayout* layout)
 {
     QWidget* wParent = qobject_cast<QWidget*>(layout->parent());
     QLayout* lParent = qobject_cast<QLayout*>(layout->parent());
-    if (!wParent && !lParent) {
-        return false;
-    }
-    layout->setParent(nullptr);
     if (wParent) {
         wParent->setLayout(layout);
-    } else {
+    } else if (lParent) {
         lParent->addItem(layout);
+    } else {
+        return false;
+    }
+    return true;
+}
+bool initBoxLayout(QBoxLayout* layout, const QDomElement& config)
+{
+    if (!initLayoutParent(layout)) {
+        return false;
     }
 
     initMargins(layout, config);
 
     QList<Kpf::Object*> objects = initObjects(layout, config);
-
     for (Kpf::Object* object : objects)
     {
         QWidget* widget = qobject_cast<QWidget*>(object->object);
@@ -104,12 +106,143 @@ bool initBoxLayout(QBoxLayout* layout, const QJsonObject& config)
     return true;
 }
 
+void addMenuItem(QObject* parent, const QDomElement& config)
+{
+    QMenuBar* menuBar = qobject_cast<QMenuBar*>(parent);
+    QToolBar* toolBar = qobject_cast<QToolBar*>(parent);
+    QToolButton* toolButton = qobject_cast<QToolButton*>(parent);
+    QAction* action = qobject_cast<QAction*>(parent);
+    QMenu* menu = qobject_cast<QMenu*>(parent);
+    if (!menuBar && !toolBar && !toolButton && !action && !menu) {
+        return;
+    }
+
+    // QMenu子节点，允许嵌套在QMenuBar、QToolButton、QAction、QMenu下
+    if (config.tagName() == TAG_MENU)
+    {
+        if (!menuBar && !toolButton && !action && !menu) {
+            return;
+        }
+
+        QMenu* subMenu = kpfObject.createObject<QMenu>(config, parent);
+        if (!subMenu) {
+            return;
+        }
+
+        QString text = config.attribute(Kpf::KEY_TEXT);
+        subMenu->setTitle(text);
+
+        if (menuBar) { // menuBar
+            menuBar->addMenu(subMenu);
+        } else if (toolButton) { // toolButton
+            toolButton->setMenu(subMenu);
+        } else if (action) { // action
+            action->setMenu(subMenu);
+        } else { // menu
+            menu->addMenu(subMenu);
+        }
+
+        for (QDomElement item = config.firstChildElement();
+             !item.isNull();
+             item = item.nextSiblingElement())
+        {
+            addMenuItem(subMenu, item);
+        }
+    }
+    // QAction子节点，允许嵌套在QMenuBar、QToolBar、QToolButton、QMenu下
+    else if (config.tagName() == TAG_ACTION)
+    {
+        if (!menuBar && !toolBar && !toolButton && !menu) {
+            return;
+        }
+
+        QAction* subAction = kpfObject.createObject<QAction>(config, parent);
+        if (!subAction) {
+            return;
+        }
+
+        QString text = config.attribute(Kpf::KEY_TEXT);
+        subAction->setText(text);
+
+        if (menuBar) { // menuBar
+            menuBar->addAction(subAction);
+        } else if (toolBar) { // toolBar
+            toolBar->addAction(subAction);
+        } else if (toolButton) { // toolButton
+            toolButton->addAction(subAction);
+        } else { // menu
+            menu->addAction(subAction);
+        }
+
+
+        for (QDomElement item = config.firstChildElement();
+             !item.isNull();
+             item = item.nextSiblingElement())
+        {
+            addMenuItem(subAction, item);
+        }
+    }
+    // Separator子节点，允许嵌套在QMenuBar、QToolBar、QMenu下
+    else if (config.tagName() == TAG_SEPARATOR)
+    {
+        if (menuBar) { // menuBar
+            menuBar->addSeparator();
+        } else if (toolBar) { // toolBar
+            toolBar->addSeparator();
+        } else if (menu) { // menu
+            menu->addSeparator();
+        }
+    }
+    // Widget子节点，允许嵌套在QMenuBar、QToolBar、QToolButton、QMenu下
+    else if (config.tagName() == TAG_WIDGET)
+    {
+        if (!menuBar && !toolBar && !toolButton && !menu) {
+            return;
+        }
+
+        QWidget* widget = kpfObject.createObject<QWidget>(config, parent);
+        if (!widget) {
+            return;
+        }
+
+        QString name = config.attribute(Kpf::KEY_NAME);
+        QWidgetAction* widgetAction = kpfObject.createObject<QWidgetAction>(
+                                          QStringLiteral("widgetAction_") + name,
+                                          QStringLiteral("QWidgetAction"),
+                                          config,
+                                          parent);
+        if (!widgetAction) {
+            return;
+        }
+
+        if (menuBar) { // menuBar
+            menuBar->addAction(widgetAction);
+        } else if (toolBar) { // toolBar
+            toolBar->addAction(widgetAction);
+        } else if (toolButton) { // toolButton
+            toolButton->addAction(widgetAction);
+        } else { // menu
+            menu->addAction(widgetAction);
+        }
+    }
+}
+
+void initMenu(QObject* parent, const QDomElement& config)
+{
+    for (QDomElement item = config.firstChildElement();
+         !item.isNull();
+         item = item.nextSiblingElement())
+    {
+        addMenuItem(parent, item);
+    }
+}
+
 KHBoxLayout::KHBoxLayout(QWidget* parent)
     : QHBoxLayout(parent)
 {
 }
 
-bool KHBoxLayout::init(const QJsonObject& config)
+bool KHBoxLayout::init(const QDomElement& config)
 {
     return initBoxLayout(this, config);
 }
@@ -119,7 +252,7 @@ KVBoxLayout::KVBoxLayout(QWidget* parent)
 {
 }
 
-bool KVBoxLayout::init(const QJsonObject& config)
+bool KVBoxLayout::init(const QDomElement& config)
 {
     return initBoxLayout(this, config);
 }
@@ -129,18 +262,10 @@ KFormLayout::KFormLayout(QWidget* parent)
 {
 }
 
-bool KFormLayout::init(const QJsonObject& config)
+bool KFormLayout::init(const QDomElement& config)
 {
-    QWidget* wParent = qobject_cast<QWidget*>(parent());
-    QLayout* lParent = qobject_cast<QLayout*>(parent());
-    if (!wParent && !lParent) {
+    if (!initLayoutParent(this)) {
         return false;
-    }
-    setParent(nullptr);
-    if (wParent) {
-        wParent->setLayout(this);
-    } else {
-        lParent->addItem(this);
     }
 
     initMargins(this, config);
@@ -158,22 +283,14 @@ bool KFormLayout::init(const QJsonObject& config)
     };
 
     QList<Object> objects;
-    if (!config.contains(TAG_ITEMS)) {
-        return true;
-    }
-
-    QJsonArray array = config.value(TAG_ITEMS).toArray();
-    for (auto it = array.begin(); it != array.end(); ++it)
+    for (QDomElement child = config.firstChildElement(TAG_FIELD);
+         !child.isNull();
+         child = child.nextSiblingElement(TAG_FIELD))
     {
-        if (!(*it).isObject()) {
+        QDomElement fieldConfig = child.firstChildElement(Kpf::TAG_CLASS);
+        if (fieldConfig.isNull()) {
             continue;
         }
-        QJsonObject child = (*it).toObject();
-
-        if (!child.contains(TAG_FIELD)) {
-            continue;
-        }
-        QJsonObject fieldConfig = child.value(TAG_FIELD).toObject();
         QSharedPointer<Kpf::Object> object = kpfObject
                                              .createObject(fieldConfig, this)
                                              .toStrongRef();
@@ -192,11 +309,10 @@ bool KFormLayout::init(const QJsonObject& config)
             continue;
         }
 
-        if (child.contains(TAG_LABEL))
+        QDomElement labelConfig = child.firstChildElement(TAG_LABEL);
+        if (!labelConfig.isNull())
         {
-            QJsonValue labelValue = child.value(TAG_FIELD);
-            obj.label.text = labelValue.toString();
-            QJsonObject labelConfig = labelValue.toObject();
+            obj.label.text = labelConfig.attribute(Kpf::KEY_TEXT);
             obj.widget = kpfObject.createObject<QWidget>(labelConfig, this);
         }
 
@@ -231,24 +347,15 @@ KGridLayout::KGridLayout(QWidget* parent)
 {
 }
 
-bool KGridLayout::init(const QJsonObject& config)
+bool KGridLayout::init(const QDomElement& config)
 {
-    QWidget* wParent = qobject_cast<QWidget*>(parent());
-    QLayout* lParent = qobject_cast<QLayout*>(parent());
-    if (!wParent && !lParent) {
+    if (!initLayoutParent(this)) {
         return false;
-    }
-    setParent(nullptr);
-    if (wParent) {
-        wParent->setLayout(this);
-    } else {
-        lParent->addItem(this);
     }
 
     initMargins(this, config);
 
     QList<Kpf::Object*> objects = initObjects(this, config);
-
     for (Kpf::Object* object : objects)
     {
         QWidget* widget = qobject_cast<QWidget*>(object->object);
@@ -261,11 +368,18 @@ bool KGridLayout::init(const QJsonObject& config)
         int columnSpan = object->object->property(TAG_ROWSPAN.toUtf8().constData()).toInt();
         columnSpan = std::max(1, columnSpan);
 
-        if (widget) {
+        if (widget)
+        {
             addWidget(widget, row, column, rowSpan, columnSpan);
-        } else if (layout) {
+        }
+        else if (layout)
+        {
             layout->setParent(nullptr);
             addLayout(layout, row, column, rowSpan, columnSpan);
+        }
+        else
+        {
+            kpfObject.destroyObject(object->name);
         }
     }
 
@@ -277,24 +391,15 @@ KStackedLayout::KStackedLayout(QWidget* parent)
 {
 }
 
-bool KStackedLayout::init(const QJsonObject& config)
+bool KStackedLayout::init(const QDomElement& config)
 {
-    QWidget* wParent = qobject_cast<QWidget*>(parent());
-    QLayout* lParent = qobject_cast<QLayout*>(parent());
-    if (!wParent && !lParent) {
+    if (!initLayoutParent(this)) {
         return false;
-    }
-    setParent(nullptr);
-    if (wParent) {
-        wParent->setLayout(this);
-    } else {
-        lParent->addItem(this);
     }
 
     initMargins(this, config);
 
     QList<Kpf::Object*> objects = initObjects(this, config);
-
     for (Kpf::Object* object : objects)
     {
         QWidget* widget = qobject_cast<QWidget*>(object->object);
@@ -313,10 +418,9 @@ KStackedWidget::KStackedWidget(QWidget* parent)
 {
 }
 
-bool KStackedWidget::init(const QJsonObject& config)
+bool KStackedWidget::init(const QDomElement& config)
 {
     QList<Kpf::Object*> objects = initObjects(this, config);
-
     for (Kpf::Object* object : objects)
     {
         QWidget* widget = qobject_cast<QWidget*>(object->object);
@@ -335,16 +439,19 @@ KTabWidget::KTabWidget(QWidget* parent)
 {
 }
 
-bool KTabWidget::init(const QJsonObject& config)
+bool KTabWidget::init(const QDomElement& config)
 {
     QList<Kpf::Object*> objects = initObjects(this, config);
-
     for (Kpf::Object* object : objects)
     {
         QWidget* widget = qobject_cast<QWidget*>(object->object);
         if (widget)
         {
-            QString title = widget->property(TAG_TAB.toUtf8().constData()).toString();
+            QString title = widget->property(TAG_TAB.toUtf8().constData())
+                            .toString();
+            if (title.isEmpty()) {
+                title = widget->objectName();
+            }
             addTab(widget, title);
         }
         else
@@ -361,22 +468,22 @@ KListWidget::KListWidget(QWidget* parent)
 {
 }
 
-bool KListWidget::init(const QJsonObject& config)
+bool KListWidget::init(const QDomElement& config)
 {
-    QJsonArray array = config.value(TAG_ITEMS).toArray();
-    for (auto it = array.constBegin(); it != array.constEnd(); ++it)
+    QList<Kpf::Object*> objects = initObjects(this, config);
+    for (Kpf::Object* object : objects)
     {
-        if (!(*it).isObject()) {
-            continue;
+        QWidget* widget = qobject_cast<QWidget*>(object->object);
+        if (widget)
+        {
+            QListWidgetItem* item = new QListWidgetItem;
+            addItem(item);
+            setItemWidget(item, widget);
         }
-        QJsonObject objectConfig = (*it).toObject();
-        QWidget* widget = kpfObject.createObject<QWidget>(objectConfig, this);
-        if (!widget) {
-            continue;
+        else
+        {
+            kpfObject.destroyObject(object->name);
         }
-        QListWidgetItem* item = new QListWidgetItem;
-        addItem(item);
-        setItemWidget(item, widget);
     }
 
     return true;
@@ -387,28 +494,22 @@ KTableWidget::KTableWidget(QWidget* parent)
 {
 }
 
-bool KTableWidget::init(const QJsonObject& config)
+bool KTableWidget::init(const QDomElement& config)
 {
-    QJsonArray array = config.value(TAG_ITEMS).toArray();
-    for (auto it = array.begin(); it != array.end(); ++it)
+    QList<Kpf::Object*> objects = initObjects(this, config);
+    for (Kpf::Object* object : objects)
     {
-        if (!(*it).isObject()) {
-            continue;
-        }
-        QJsonObject objectConfig = (*it).toObject();
-
-        int row = objectConfig.value(TAG_ROW).toInt();
-        int col = objectConfig.value(TAG_COLUMN).toInt();
-
-        QWidget* widget = kpfObject.createObject<QWidget>(objectConfig, this);
+        QWidget* widget = qobject_cast<QWidget*>(object->object);
         if (!widget) {
             continue;
         }
+
+        int row = widget->property(TAG_ROW.toUtf8().constData()).toInt();
+        int col = widget->property(TAG_ROW.toUtf8().constData()).toInt();
         setRowCount(std::max(row+1, rowCount()));
         setColumnCount(std::max(col+1, columnCount()));
         setCellWidget(row, col, widget);
     }
-
     return true;
 }
 
@@ -417,17 +518,15 @@ KAction::KAction(QObject* parent)
 {
 }
 
-bool KAction::init(const QJsonObject &config)
+bool KAction::init(const QDomElement &config)
 {
-    QIcon icon = QIcon(QApplication::applicationDirPath() + QDir::separator() + config.value(TAG_ICON).toString());
+    QIcon icon = QIcon(QFileInfo(QApplication::applicationDirPath()
+                                 + QDir::separator()
+                                 + config.attribute(TAG_ICON))
+                       .absoluteFilePath());
     if(!icon.isNull()){
         setIcon(icon);
     }
-
-    index = config.value(TAG_INDEX).toInt();
-    connect(this, &QAction::triggered, [this](){
-        emit triggered(index);
-    });
     return true;
 }
 
@@ -436,123 +535,10 @@ KMenuBar::KMenuBar(QWidget* parent)
 {
 }
 
-bool KMenuBar::init(const QJsonObject& config)
+bool KMenuBar::init(const QDomElement& config)
 {
-    QJsonArray array = config.value(TAG_ITEMS).toArray();
-    for (auto it = array.begin(); it != array.end(); ++it)
-    {
-        if ((*it).isObject()) {
-            addMenuItem(this, (*it).toObject());
-        }
-    }
+    initMenu(this, config);
     return true;
-}
-
-void KMenuBar::addMenuItem(QObject* parent, const QJsonObject& config)
-{
-    QMenuBar* menuBar = qobject_cast<QMenuBar*>(parent);
-    QAction* action = qobject_cast<QAction*>(parent);
-    QMenu* menu = qobject_cast<QMenu*>(parent);
-    if (!menuBar && !action && !menu) {
-        return;
-    }
-
-    // QMenu子节点，允许嵌套在QMenuBar、QAction、QMenu下
-    if (config.contains(TAG_MENU))
-    {
-        QMenu* subMenu = kpfObject.createObject<QMenu>(QString(),
-                                                       QStringLiteral("QMenu"),
-                                                       config,
-                                                       parent);
-        if (!subMenu) {
-            return;
-        }
-
-        QString text = config.value(TAG_MENU).toVariant().toString();
-        subMenu->setTitle(text);
-
-        if (menuBar) { // menuBar
-            menuBar->addMenu(subMenu);
-        } else if (action) { // action
-            action->setMenu(subMenu);
-        } else { // menu
-            menu->addMenu(subMenu);
-        }
-
-        QJsonArray array = config.value(TAG_ITEMS).toArray();
-        for (auto it = array.begin(); it != array.end(); ++it)
-        {
-            if ((*it).isObject()) {
-                addMenuItem(subMenu, (*it).toObject());
-            }
-        }
-    }
-    // QAction子节点，允许嵌套在QMenuBar、QMenu下
-    else if (config.contains(TAG_ACTION))
-    {
-        if (!menuBar && !menu) {
-            return;
-        }
-
-        QAction* subAction = kpfObject.createObject<QAction>(QString(),
-                                                             QStringLiteral("QAction"),
-                                                             config,
-                                                             parent);
-        if (!subAction) {
-            return;
-        }
-
-        QString text = config.value(TAG_ACTION).toVariant().toString();
-        subAction->setText(text);
-
-        if (menuBar) { // menuBar
-            menuBar->addAction(subAction);
-        } else { // menu
-            menu->addAction(subAction);
-        }
-
-        QJsonArray array = config.value(TAG_ITEMS).toArray();
-        for (auto it = array.begin(); it != array.end(); ++it)
-        {
-            if ((*it).isObject()) {
-                addMenuItem(subAction, (*it).toObject());
-            }
-        }
-    }
-    // Separator子节点，允许嵌套在QMenuBar、QMenu下
-    else if (config.contains(TAG_SEPARATOR))
-    {
-        if (menuBar) { // menuBar
-            menuBar->addSeparator();
-        } else if (menu) { // menu
-            menu->addSeparator();
-        } else { // action
-            return;
-        }
-    }
-    // Widget子节点，允许嵌套在QMenuBar、QMenu下
-    else if (config.contains(TAG_WIDGET))
-    {
-        if (!menuBar || !menu) {
-            return;
-        }
-
-        QString name = config.value(Kpf::TAG_NAME).toString();
-        QAction* widgetAction = kpfObject.createObject<QAction>(
-                                    QStringLiteral("widgetAction_") + name,
-                                    QStringLiteral("QWidgetAction"),
-                                    config,
-                                    parent);
-        if (!widgetAction) {
-            return;
-        }
-
-        if (menuBar) { // menuBar
-            menuBar->addAction(widgetAction);
-        } else { // menu
-            menu->addAction(widgetAction);
-        }
-    }
 }
 
 KToolBar::KToolBar(QWidget* parent)
@@ -560,127 +546,10 @@ KToolBar::KToolBar(QWidget* parent)
 {
 }
 
-bool KToolBar::init(const QJsonObject& config)
+bool KToolBar::init(const QDomElement& config)
 {
-    QJsonArray array = config.value(TAG_ITEMS).toArray();
-    for (auto it = array.begin(); it != array.end(); ++it)
-    {
-        if ((*it).isObject()) {
-            addMenuItem(this, (*it).toObject());
-        }
-    }
+    initMenu(this, config);
     return true;
-}
-
-void KToolBar::addMenuItem(QObject* parent, const QJsonObject& config)
-{
-    QToolBar* toolBar = qobject_cast<QToolBar*>(parent);
-    QAction* action = qobject_cast<QAction*>(parent);
-    QMenu* menu = qobject_cast<QMenu*>(parent);
-    if (!toolBar && !action && !menu) {
-        return;
-    }
-
-    // QMenu子节点，允许嵌套在QToolBar、QAction、QMenu下
-    if (config.contains(TAG_MENU))
-    {
-        if (!action && !menu) {
-            return;
-        }
-
-        QMenu* subMenu = kpfObject.createObject<QMenu>(QString(),
-                                                       QStringLiteral("QMenu"),
-                                                       config,
-                                                       parent);
-        if (!subMenu) {
-            return;
-        }
-
-        QString text = config.value(TAG_MENU).toVariant().toString();
-        subMenu->setTitle(text);
-
-        if (action) { // action
-            action->setMenu(subMenu);
-        } else { // menu
-            menu->addMenu(subMenu);
-        }
-
-        QJsonArray array = config.value(TAG_ITEMS).toArray();
-        for (auto it = array.begin(); it != array.end(); ++it)
-        {
-            if ((*it).isObject()) {
-                addMenuItem(subMenu, (*it).toObject());
-            }
-        }
-    }
-    // QAction子节点，允许嵌套在QToolBar、QMenu下
-    else if (config.contains(TAG_ACTION))
-    {
-        if (!toolBar && !menu) {
-            return;
-        }
-
-        QAction* subAction = kpfObject.createObject<QAction>(QString(),
-                                                             QStringLiteral("QAction"),
-                                                             config,
-                                                             parent);
-        if (!subAction) {
-            return;
-        }
-
-        QString text = config.value(TAG_ACTION).toVariant().toString();
-        subAction->setText(text);
-
-        if (toolBar) { // toolbar
-            toolBar->addAction(subAction);
-        } else { // menu
-            menu->addAction(subAction);
-        }
-
-        QJsonArray array = config.value(TAG_ITEMS).toArray();
-        for (auto it = array.begin(); it != array.end(); ++it)
-        {
-            if ((*it).isObject()) {
-                addMenuItem(subAction, (*it).toObject());
-            }
-        }
-    }
-    // Separator子节点，允许嵌套在QToolBar、QMenu下
-    else if (config.contains(TAG_SEPARATOR))
-    {
-        if (!toolBar && !menu) {
-            return;
-        }
-
-        if (toolBar) { // toolbar
-            toolBar->addSeparator();
-        } else { // menu
-            menu->addSeparator();
-        }
-    }
-    // Widget子节点，允许嵌套在QToolBar、QMenu下
-    else if (config.contains(TAG_WIDGET))
-    {
-        if (!toolBar && !menu) {
-            return;
-        }
-
-        QString name = config.value(Kpf::TAG_NAME).toString();
-        QAction* widgetAction = kpfObject.createObject<QAction>(
-                                    QStringLiteral("widgetAction_") + name,
-                                    QStringLiteral("QWidgetAction"),
-                                    config,
-                                    parent);
-        if (!widgetAction) {
-            return;
-        }
-
-        if (toolBar) { // toolBar
-            toolBar->addAction(widgetAction);
-        } else { // menu
-            menu->addAction(widgetAction);
-        }
-    }
 }
 
 KToolButton::KToolButton(QWidget* parent)
@@ -688,120 +557,10 @@ KToolButton::KToolButton(QWidget* parent)
 {
 }
 
-bool KToolButton::init(const QJsonObject& config)
+bool KToolButton::init(const QDomElement& config)
 {
-    QJsonArray array = config.value(TAG_ITEMS).toArray();
-    for (auto it = array.begin(); it != array.end(); ++it)
-    {
-        if ((*it).isObject()) {
-            addMenuItem(this, (*it).toObject());
-        }
-    }
+    initMenu(this, config);
     return true;
-}
-
-void KToolButton::addMenuItem(QObject* parent, const QJsonObject& config)
-{
-    QToolButton* toolButton = qobject_cast<QToolButton*>(parent);
-    QAction* action = qobject_cast<QAction*>(parent);
-    QMenu* menu = qobject_cast<QMenu*>(parent);
-    if (!toolButton && !action && !menu) {
-        return;
-    }
-
-    // QMenu子节点，允许嵌套在QToolButton、QAction、QMenu下
-    if (config.contains(TAG_MENU))
-    {
-        QMenu* subMenu = kpfObject.createObject<QMenu>(QString(),
-                                                       QStringLiteral("QMenu"),
-                                                       config,
-                                                       parent);
-        if (!subMenu) {
-            return;
-        }
-
-        QString text = config.value(TAG_MENU).toVariant().toString();
-        subMenu->setTitle(text);
-
-        if (toolButton) { // QToolButton
-            toolButton->setMenu(subMenu);
-        } else if (action) { // action
-            action->setMenu(subMenu);
-        } else { // menu
-            menu->addMenu(subMenu);
-        }
-
-        QJsonArray array = config.value(TAG_ITEMS).toArray();
-        for (auto it = array.begin(); it != array.end(); ++it)
-        {
-            if ((*it).isObject()) {
-                addMenuItem(subMenu, (*it).toObject());
-            }
-        }
-    }
-    // QAction子节点，允许嵌套在QToolButton、QMenu下
-    else if (config.contains(TAG_ACTION))
-    {
-        if (!toolButton && !menu) {
-            return;
-        }
-
-        QAction* subAction = kpfObject.createObject<QAction>(QString(),
-                                                             QStringLiteral("QAction"),
-                                                             config,
-                                                             parent);
-        if (!subAction) {
-            return;
-        }
-
-        QString text = config.value(TAG_ACTION).toVariant().toString();
-        subAction->setText(text);
-
-        if (toolButton) { // toolbar
-            toolButton->addAction(subAction);
-        } else { // menu
-            menu->addAction(subAction);
-        }
-
-        QJsonArray array = config.value(TAG_ITEMS).toArray();
-        for (auto it = array.begin(); it != array.end(); ++it)
-        {
-            if ((*it).isObject()) {
-                addMenuItem(subAction, (*it).toObject());
-            }
-        }
-    }
-    // Separator子节点，允许嵌套在QMenu下
-    else if (config.contains(TAG_SEPARATOR))
-    {
-        if (!menu) {
-            return;
-        }
-        menu->addSeparator();
-    }
-    // Widget子节点，允许嵌套在QToolButton、QMenu下
-    else if (config.contains(TAG_WIDGET))
-    {
-        if (!toolButton && !menu) {
-            return;
-        }
-
-        QString name = config.value(Kpf::TAG_NAME).toString();
-        QAction* widgetAction = kpfObject.createObject<QAction>(
-                                    QStringLiteral("widgetAction_") + name,
-                                    QStringLiteral("QWidgetAction"),
-                                    config,
-                                    parent);
-        if (!widgetAction) {
-            return;
-        }
-
-        if (toolButton) { // QToolButton
-            toolButton->addAction(widgetAction);
-        } else { // menu
-            menu->addAction(widgetAction);
-        }
-    }
 }
 
 KWidgetAction::KWidgetAction(QObject* parent)
@@ -809,7 +568,7 @@ KWidgetAction::KWidgetAction(QObject* parent)
 {
 }
 
-bool KWidgetAction::init(const QJsonObject& config)
+bool KWidgetAction::init(const QDomElement& config)
 {
     QWidget* widget = kpfObject.createObject<QWidget>(config, this);
     if (!widget) {
@@ -826,36 +585,33 @@ KMainWindow::KMainWindow(QWidget* parent, Qt::WindowFlags flags)
 {
 }
 
-bool KMainWindow::init(const QJsonObject& config)
+bool KMainWindow::init(const QDomElement& config)
 {
-    QJsonObject menuBarConfig = config.value(TAG_MENUBAR).toObject();
-    QMenuBar* menuBar = kpfObject.createObject<QMenuBar>(QString(),
-                                                         QStringLiteral("QMenuBar"),
-                                                         menuBarConfig,
+    QDomElement menuBarConfig = config.firstChildElement(TAG_MENUBAR);
+    QMenuBar* menuBar = kpfObject.createObject<QMenuBar>(menuBarConfig,
                                                          this);
     if (menuBar) {
         setMenuBar(menuBar);
     }
 
-    QJsonArray toolBarConfig = config.value(TAG_TOOLBAR).toArray();
-    for (auto it = toolBarConfig.begin(); it != toolBarConfig.end(); ++it)
+    QDomElement toolBarConfig = config.firstChildElement(TAG_TOOLBARS);
+    for (QDomElement subToolBar = toolBarConfig.firstChildElement(Kpf::TAG_CLASS);
+         !subToolBar.isNull();
+         subToolBar = subToolBar.nextSiblingElement(Kpf::TAG_CLASS))
     {
-        QToolBar* toolBar = kpfObject.createObject<QToolBar>(QString(),
-                                                             QStringLiteral("QToolBar"),
-                                                             (*it).toObject(),
-                                                             this);
+        QToolBar* toolBar = kpfObject.createObject<QToolBar>(subToolBar, this);
         if (toolBar) {
             addToolBar(toolBar);
         }
     }
 
-    QJsonObject centralWidgetConfig = config.value(TAG_CENTRALWIDGET).toObject();
+    QDomElement centralWidgetConfig = config.firstChildElement(TAG_CENTRALWIDGET);
     QWidget* centralWidget = kpfObject.createObject<QWidget>(centralWidgetConfig, this);
     if (centralWidget) {
         setCentralWidget(centralWidget);
     }
 
-    QJsonObject statusBarConfig = config.value(TAG_STATUSBAR).toObject();
+    QDomElement statusBarConfig = config.firstChildElement(TAG_STATUSBAR);
     QStatusBar* statusBar = kpfObject.createObject<QStatusBar>(statusBarConfig, this);
     if (statusBar) {
         setStatusBar(statusBar);

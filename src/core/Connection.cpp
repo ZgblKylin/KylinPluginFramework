@@ -103,15 +103,15 @@ const QWeakPointer<Kpf::Connection> Kpf::ConnectionManagerImpl::createConnection
     }
 }
 
-const QWeakPointer<Kpf::Connection> Kpf::ConnectionManagerImpl::createConnection(const QJsonObject& config)
+const QWeakPointer<Kpf::Connection> Kpf::ConnectionManagerImpl::createConnection(const QDomElement& config)
 {
     QMutexLocker locker(kpfMutex());
 
-    QString sender = config.value(TAG_SENDER).toString();
-    QString signal = config.value(TAG_SIGNAL).toString();
-    QString receiver = config.value(TAG_RECEIVER).toString();
-    QString slot = config.value(TAG_SLOT).toString();
-    QString type = config.value(TAG_TYPE).toString(ConnectionTypes.key(Qt::AutoConnection));
+    QString sender = config.attribute(KEY_SENDER);
+    QString signal = config.attribute(KEY_SIGNAL);
+    QString receiver = config.attribute(KEY_RECEIVER);
+    QString slot = config.attribute(KEY_SLOT);
+    QString type = config.attribute(KEY_TYPE, ConnectionTypes.key(Qt::AutoConnection));
     if(!ConnectionTypes.contains(type)) {
         kpfCWarning("Kpf") << "无效发送类型" << type;
     }

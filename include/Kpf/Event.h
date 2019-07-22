@@ -53,7 +53,7 @@ struct IEventNotifier
     virtual void postEvent(const ObjectEvent& event, const QVariantList& args) { Q_UNUSED(event) Q_UNUSED(args) }
 };
 
-class KPFSHARED_EXPORT EventManager : public QObject, virtual public NotifyManager<IEventNotifier>
+class KPFSHARED_EXPORT EventManager : public QObject, virtual public INotifyManager<IEventNotifier>
 {
     Q_OBJECT
 public:

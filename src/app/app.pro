@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui xml
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TEMPLATE = app
@@ -38,6 +38,10 @@ FORMS += \
     MainWindow.ui
 
 DISTFILES += \
-    $$PWD/../../bin/config/app.json
+    $$PWD/../../bin/config/app.json \
+    $$PWD/../../bin/components/test.json \
+    $$PWD/../../bin/config/app.xml \
+    $$PWD/../../bin/components/test.xml
+
 
 include($$PWD/../../Kpf.pri)

@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include <Kpf/Kpf.h>
-#include <Kpf/Debugging/Debugging.h>
 #include "CommonPrivate.h"
 #include "ConnectionImpl.h"
 #include "ClassImpl.h"
@@ -12,8 +11,13 @@
 #include "ConnectionImpl.h"
 #include "KpfLogPrivate.h"
 
+#ifdef Q_CC_MSVC
+#pragma warning(push)
+#pragma warning(disable:4250)
+#endif
+
 namespace Kpf {
-class KpfCoreImpl : public KpfCore, public NotifyManagerImpl<ICoreNotifier>
+class KpfCoreImpl : public KpfCore, public NotifyManager<ICoreNotifier>
 {
 public:
     struct SignalEvent
@@ -23,7 +27,7 @@ public:
         QMetaMethod slot;
     };
 
-    virtual ~KpfCoreImpl();
+    virtual ~KpfCoreImpl() override;
 
     static KpfCoreImpl& instance();
     ClassManagerImpl& classManager();
@@ -46,24 +50,23 @@ private:
     KpfCoreImpl();
 
     bool loadPlugins();
-    bool loadAppConfig();
-    bool loadComponent(const QDir& dir);
-    template<typename Value>
-    void expandComponents(Value& value);
+    bool loadAppConfig(const QString& appFile);
+    bool loadComponents(const QDir& dir);
+    void expandComponents();
+    void expandComponent(QDomElement& node, QMap<QString, QDomElement>& map);
     bool initConnections();
     bool processInitializations();
-
-    void expandObjectComponent(QJsonObject& element);
-    QJsonArray expandStringComponent(QJsonValueRef& ref);
 
     void atExit();
 
     QMutex mtx;
-    QJsonObject rootNode;
-    QJsonArray objectsNode;
-    QJsonArray connectionsNode;
-    QJsonArray initializationsNode;
-    QMap<QString, QJsonValue> componentsNode;
+    QDomElement rootNode;
+    QDomElement objectsNode;
+    QDomElement connectionsNode;
+    QDomElement initializationsNode;
+    QMap<QString, QDomElement> objectsComponentsNode;
+    QMap<QString, QDomElement> connectionsComponentsNode;
+    QMap<QString, QDomElement> initializationsComponentsNode;
 
     QScopedPointer<ClassManagerImpl> classManagerImpl;
     QScopedPointer<ThreadManagerImpl> threadManagerImpl;
@@ -79,32 +82,6 @@ private:
 } // namespace Kpf
 #define kpfCoreImpl Kpf::KpfCoreImpl::instance()
 
-KPF_REGISTER(QPauseAnimation)
-KPF_REGISTER(QPropertyAnimation)
-KPF_REGISTER(QVariantAnimation)
-KPF_REGISTER(QFile)
-KPF_REGISTER(QFileSelector)
-KPF_REGISTER(QFileSystemWatcher)
-KPF_REGISTER(QProcess)
-KPF_REGISTER(QSaveFile)
-KPF_REGISTER(QIdentityProxyModel)
-KPF_REGISTER(QSortFilterProxyModel)
-KPF_REGISTER(QStringListModel)
-KPF_REGISTER(QEventLoop)
-KPF_REGISTER(QObject)
-KPF_REGISTER(QSharedMemory)
-KPF_REGISTER(QTimer)
-KPF_REGISTER(QTranslator)
-KPF_REGISTER(QLibrary)
-KPF_REGISTER(QPluginLoader)
-KPF_REGISTER(QEventTransition)
-KPF_REGISTER(QFinalState)
-KPF_REGISTER(QHistoryState)
-KPF_REGISTER(QSignalTransition)
-KPF_REGISTER(QState)
-KPF_REGISTER(QStateMachine)
-KPF_REGISTER(QThread)
-KPF_REGISTER(QThreadPool)
-KPF_REGISTER(QTimeLine)
-
-KPF_REGISTER(Debugging)
+#ifdef Q_CC_MSVC
+#pragma warning(pop)
+#endif

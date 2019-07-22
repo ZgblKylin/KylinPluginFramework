@@ -1,4 +1,4 @@
-#ifndef LOGCOMMON_H
+﻿#ifndef LOGCOMMON_H
 #define LOGCOMMON_H
 
 #include <QtCore/QtCore>

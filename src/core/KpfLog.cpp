@@ -1,4 +1,4 @@
-#include "KpfLogPrivate.h"
+﻿#include "KpfLogPrivate.h"
 #include "KpfPrivate.h"
 
 using namespace Log::Impl;
@@ -28,14 +28,17 @@ void Kpf::initLogger(int argc, char* argv[])
     logFileMmapSaver = kpfObject.createObject<LogFileMmapSaver>(
                            QStringLiteral("logFileMmapSaver"),
                            QStringLiteral("LogFileMmapSaver"));
-    QDir dir(qApp->applicationDirPath()
-             + QDir::separator()
-             + QStringLiteral("Log_Critical"));
-    if (!dir.exists()) {
-        dir.mkpath(dir.absolutePath());
+    if (logFileMmapSaver)
+    {
+        QDir dir(qApp->applicationDirPath()
+                 + QDir::separator()
+                 + QStringLiteral("Log_Critical"));
+        if (!dir.exists()) {
+            dir.mkpath(dir.absolutePath());
+        }
+        logFileMmapSaver->setDir(dir.absolutePath());
+        logFileMmapSaver->setFilter(Log::Critical);
     }
-    logFileMmapSaver->setDir(dir.absolutePath());
-    logFileMmapSaver->setFilter(Log::Critical);
 
     LogFileNormalSaver* logFileNormalSaver;
     logFileNormalSaver = kpfObject.createObject<LogFileNormalSaver>(

@@ -31,7 +31,7 @@ struct IThreadNotifier
     virtual void threadStopped(const QString& threadName) { Q_UNUSED(threadName) }
 };
 
-class KPFSHARED_EXPORT ThreadManager : public QObject, virtual public NotifyManager<IThreadNotifier>
+class KPFSHARED_EXPORT ThreadManager : public QObject, virtual public INotifyManager<IThreadNotifier>
 {
     Q_OBJECT
 public:

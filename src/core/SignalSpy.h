@@ -2,8 +2,7 @@
 #include <Kpf/Kpf.h>
 
 namespace Kpf {
-class ObjectImpl;
-
+struct ObjectImpl;
 class SignalSpy : public QObject
 {
 public:

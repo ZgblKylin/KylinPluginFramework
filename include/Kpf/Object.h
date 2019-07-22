@@ -32,7 +32,7 @@ struct KPFSHARED_EXPORT Object
 
     QSharedPointer<MetaClass> objectClass;
     QString name;
-    QJsonObject config;
+    QDomElement config;
     QPointer<QObject> object;
     Base* base;
     QSharedPointer<Thread> thread;
@@ -50,7 +50,7 @@ struct IObjectNotifier
     virtual void objectDestroyed(const QString& className, const QString& objectName) { Q_UNUSED(className) Q_UNUSED(objectName) }
 };
 
-class KPFSHARED_EXPORT ObjectManager : public QObject, virtual public NotifyManager<IObjectNotifier>
+class KPFSHARED_EXPORT ObjectManager : public QObject, virtual public INotifyManager<IObjectNotifier>
 {
     Q_OBJECT
 public:
@@ -74,15 +74,15 @@ public:
      * @param parent 对象的父对象
      * @return 构造的新对象，若构造失败，返回nullptr
      */
-    virtual QWeakPointer<Object> createObject(QString name, QString className, QJsonObject config = QJsonObject(), QObject* parent = nullptr) = 0;
-    QWeakPointer<Object> createObject(QString className, QJsonObject config = QJsonObject(), QObject* parent = nullptr);
-    QWeakPointer<Object> createObject(QJsonObject config, QObject* parent = nullptr);
+    virtual QWeakPointer<Object> createObject(QString name, QString className, const QDomElement& config = QDomElement(), QObject* parent = qApp) = 0;
+    QWeakPointer<Object> createObject(QString className, const QDomElement& config = QDomElement(), QObject* parent = qApp);
+    QWeakPointer<Object> createObject(const QDomElement& config, QObject* parent = qApp);
     template<typename T>
-    T* createObject(QString name, QString className, QJsonObject config = QJsonObject(), QObject* parent = nullptr);
+    T* createObject(QString name, QString className, const QDomElement& config = QDomElement(), QObject* parent = qApp);
     template<typename T>
-    T* createObject(QString className, QJsonObject config = QJsonObject(), QObject* parent = nullptr);
+    T* createObject(QString className, const QDomElement& config = QDomElement(), QObject* parent = qApp);
     template<typename T>
-    T* createObject(QJsonObject config, QObject* parent = nullptr);
+    T* createObject(const QDomElement& config, QObject* parent = qApp);
 
     // 销毁对应名称的对象
     virtual void destroyObject(const QString& name) = 0;
@@ -111,18 +111,18 @@ inline T* ObjectManager::findObject(const QString& name) const
     return ptr;
 }
 
-inline QWeakPointer<Object> ObjectManager::createObject(QString className, QJsonObject config, QObject* parent)
+inline QWeakPointer<Object> ObjectManager::createObject(QString className, const QDomElement& config, QObject* parent)
 {
-    return createObject(config.value(TAG_NAME).toString(), className, config, parent);
+    return createObject(config.attribute(KEY_NAME), className, config, parent);
 }
 
-inline QWeakPointer<Object> ObjectManager::createObject(QJsonObject config, QObject* parent)
+inline QWeakPointer<Object> ObjectManager::createObject(const QDomElement& config, QObject* parent)
 {
-    return createObject(config.value(TAG_NAME).toString(), config.value(TAG_CLASS).toString(), config, parent);
+    return createObject(config.attribute(KEY_NAME), config.attribute(KEY_CLASS), config, parent);
 }
 
 template<typename T>
-T* ObjectManager::createObject(QString name, QString className, QJsonObject config, QObject* parent)
+T* ObjectManager::createObject(QString name, QString className, const QDomElement& config, QObject* parent)
 {
     QSharedPointer<Object> object = createObject(name, className, config, parent)
                                     .toStrongRef();
@@ -136,19 +136,22 @@ T* ObjectManager::createObject(QString name, QString className, QJsonObject conf
         if (!ptr) {
             ptr = toDelivered<T>(object->object.data());
         }
+        if (!ptr) {
+            destroyObject(object->name);
+        }
         return ptr;
     }
 }
 
 template<typename T>
-T* ObjectManager::createObject(QString className, QJsonObject config, QObject* parent)
+T* ObjectManager::createObject(QString className, const QDomElement& config, QObject* parent)
 {
-    return createObject<T>(config.value(TAG_NAME).toString(), className, config, parent);
+    return createObject<T>(config.attribute(KEY_NAME), className, config, parent);
 }
 
 template<typename T>
-T* ObjectManager::createObject(QJsonObject config, QObject* parent)
+T* ObjectManager::createObject(const QDomElement& config, QObject* parent)
 {
-    return createObject<T>(config.value(TAG_NAME).toString(), config.value(TAG_CLASS).toString(), config, parent);
+    return createObject<T>(config.attribute(KEY_NAME), config.attribute(KEY_CLASS), config, parent);
 }
 } // namespace Kpf

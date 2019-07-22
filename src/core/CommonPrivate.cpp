@@ -1,6 +1,7 @@
 ﻿#include "CommonPrivate.h"
 #include "KpfPrivate.h"
 #include "KpfCoreImpl.h"
+#include "RegisterQtClasses.h"
 
 QString normalizedSignature(QString signature)
 {

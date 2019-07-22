@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <Kpf/Kpf.h>
@@ -17,9 +17,8 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     virtual ~MainWindow();
 
-    Q_SLOT bool init(const QJsonObject& config);
-    Q_SIGNAL void test(QString text);
-    Q_SLOT void testSlot(QString text);
+    Q_SLOT bool init(const QDomElement& config);
+
     Q_SLOT QString testEvent(QString text);
 
 protected:

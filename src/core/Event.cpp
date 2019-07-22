@@ -218,71 +218,51 @@ void Kpf::EventManagerImpl::registerSubEvent(const QString& eventName, ObjectEve
 void Kpf::EventManagerImpl::setupObjectEvents(QSharedPointer<ObjectImpl>& object)
 {
     QMutexLocker locker(kpfMutex());
-    if (object->config.contains(TAG_PUBEVENT))
+    for (QDomElement config = object->config.firstChildElement(TAG_PUBEVENT);
+         !config.isNull();
+         config = config.nextSiblingElement(TAG_PUBEVENT))
     {
-        QJsonValue value = object->config.value(TAG_PUBEVENT);
-        if (value.isArray())
-        {
-            QJsonArray pubEvts = value.toArray();
-            for (auto it = pubEvts.begin(); it != pubEvts.end(); ++it)
-            {
-                if (!(*it).isObject()) {
-                    continue;
-                }
-                QJsonObject config = (*it).toObject();
-                QString eventName = config.value(TAG_EVENTID).toString();
-                QString signal = normalizedSignature(config.value(TAG_SIGNAL).toString());
-                QString topic = config.value(TAG_TOPIC).toString();
-                if ((eventName.isEmpty() && signal.isEmpty()) || topic.isEmpty()) {
-                    continue;
-                }
+        QString eventName = config.attribute(KEY_EVENTID);
+        QString signal = normalizedSignature(config.attribute(KEY_SIGNAL));
+        QString topic = config.attribute(KEY_TOPIC);
+        if ((eventName.isEmpty() && signal.isEmpty()) || topic.isEmpty()) {
+            continue;
+        }
 
-                if (!eventName.isEmpty())
-                {
-                    addPubEvent(object->name, eventName, topic, false);
-                }
-                else // !signal.isEmpty()
-                {
-                    addPubEvent(object->name, signal, topic, true);
-                }
-            }
+        if (!eventName.isEmpty())
+        {
+            addPubEvent(object->name, eventName, topic, false);
+        }
+        else // !signal.isEmpty()
+        {
+            addPubEvent(object->name, signal, topic, true);
         }
     }
 
-    if (object->config.contains(TAG_SUBEVENT))
+    for (QDomElement config = object->config.firstChildElement(TAG_SUBEVENT);
+         !config.isNull();
+         config = config.nextSiblingElement(TAG_SUBEVENT))
     {
-        QJsonValue value = object->config.value(TAG_SUBEVENT);
-        if (value.isArray())
-        {
-            QJsonArray subEvts = value.toArray();
-            for (auto it = subEvts.begin(); it != subEvts.end(); ++it)
-            {
-                if (!(*it).isObject()) {
-                    continue;
-                }
-                QJsonObject config = (*it).toObject();
-                QString eventId = config.value(TAG_EVENTID).toString();
-                QString signal = normalizedSignature(config.value(TAG_SIGNAL).toString());
-                QString slot = normalizedSignature(config.value(TAG_SLOT).toString());
-                QString topic = config.value(TAG_TOPIC).toString();
-                if ((eventId.isEmpty() && slot.isEmpty() && signal.isEmpty())
-                    || topic.isEmpty()) {
-                    continue;
-                }
+        QString eventId = config.attribute(KEY_EVENTID);
+        QString signal = normalizedSignature(config.attribute(KEY_SIGNAL));
+        QString slot = normalizedSignature(config.attribute(KEY_SLOT));
+        QString topic = config.attribute(KEY_TOPIC);
+        if ((eventId.isEmpty() && slot.isEmpty() && signal.isEmpty())
+            || topic.isEmpty()) {
+            continue;
+        }
 
-                if (!eventId.isEmpty())
-                {
-                    addSubEvent(object->name, eventId, topic, false);
-                }
-                else if(!slot.isEmpty())
-                {
-                    addSubEvent(object->name, slot, topic, true);
-                }
-                else // !signal.isEmpty()
-                {
-                    addSubEvent(object->name, signal, topic, true);
-                }
-            }
+        if (!eventId.isEmpty())
+        {
+            addSubEvent(object->name, eventId, topic, false);
+        }
+        else if(!slot.isEmpty())
+        {
+            addSubEvent(object->name, slot, topic, true);
+        }
+        else // !signal.isEmpty()
+        {
+            addSubEvent(object->name, signal, topic, true);
         }
     }
 }
@@ -311,7 +291,7 @@ void Kpf::EventManagerImpl::registerSubSignalSlotEvent(QSharedPointer<Kpf::Objec
 
     ObjectEvent* eventObject = new ObjectEvent;
     InvokeMethodSyncHelper* invokeHelper;
-    invokeHelper = new InvokeMethodSyncHelper(object->object.data(), method);
+    invokeHelper = new InvokeMethodSyncHelper(object->object, method);
     eventObject->func = [invokeHelper](const QVariantList& args)->QVariant{
         return invokeHelper->invoke(args);
     };

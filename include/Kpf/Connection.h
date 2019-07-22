@@ -27,7 +27,7 @@ struct IConnectionNotifier
     virtual void connectionRemoved(const QString& sender, const QByteArray& signal, const QString& receiver, const QByteArray& slot, Qt::ConnectionType type = Qt::AutoConnection) { Q_UNUSED(sender) Q_UNUSED(signal) Q_UNUSED(receiver) Q_UNUSED(slot) Q_UNUSED(type) }
 };
 
-class KPFSHARED_EXPORT ConnectionManager : public QObject, virtual public NotifyManager<IConnectionNotifier>
+class KPFSHARED_EXPORT ConnectionManager : public QObject, virtual public INotifyManager<IConnectionNotifier>
 {
     Q_OBJECT
 public:
@@ -46,7 +46,7 @@ public:
      */
     virtual const QWeakPointer<Connection> createConnection(const QString& sender, const QString& signal, const QString& receiver, const QString& slot, Qt::ConnectionType type = Qt::AutoConnection) = 0;
     // 根据配置节点创建信号槽，格式详见app.json
-    virtual const QWeakPointer<Connection> createConnection(const QJsonObject& config) = 0;
+    virtual const QWeakPointer<Connection> createConnection(const QDomElement& config) = 0;
     // 销毁信号槽连接
     virtual void removeConnection(QWeakPointer<Connection> connection) = 0;
     // 获取当前已建立的所有信号槽连接

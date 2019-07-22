@@ -1,4 +1,4 @@
-#include "SignalSpy.h"
+﻿#include "SignalSpy.h"
 #include "KpfPrivate.h"
 
 Kpf::SignalSpy::SignalSpy(QSharedPointer<Kpf::ObjectImpl>& object, const QByteArray& eventName)
@@ -18,12 +18,12 @@ Kpf::SignalSpy::SignalSpy(QSharedPointer<Kpf::ObjectImpl>& object, const QByteAr
         return;
     }
 
-    if (!QMetaObject::connect(object->object.data(),
+    if (!QMetaObject::connect(object->object,
                               signalIndex,
                               this,
                               memberOffset,
                               Qt::AutoConnection,
-                              0))
+                              nullptr))
     {
         kpfCWarning("Kpf") << "Create signal spy for object" << object->name
                            << "failed: QMetaObject::connect returned false";

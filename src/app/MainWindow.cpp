@@ -1,4 +1,4 @@
-#include "MainWindow.h"
+﻿#include "MainWindow.h"
 #include "ui_MainWindow.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -6,9 +6,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    connect(this, &MainWindow::test,
-            this, &MainWindow::testSlot,
-            Qt::DirectConnection);
 }
 
 MainWindow::~MainWindow()
@@ -16,27 +13,20 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-bool MainWindow::init(const QJsonObject& config)
+bool MainWindow::init(const QDomElement&)
 {
-    qDebug() << "MainWindow::init"
-             << config
-             << "Invoke thread" << QThread::currentThread()
-             << "This thread" << thread();
+    kpfInformation() << "MainWindow: initialized at thread" << QThread::currentThread()
+                     << ",it's belonging thread is" << thread()
+                     << ", main thread is" << qApp->thread();
     return true;
-}
-
-void MainWindow::testSlot(QString text)
-{
-    qDebug() << "MainWindow::test" << text
-             << "Invoke thread" << QThread::currentThread()
-             << "This thread" << thread();
 }
 
 QString MainWindow::testEvent(QString text)
 {
-    qDebug() << "MainWindow::testEvent" << text
-             << "Invoke thread" << QThread::currentThread()
-             << "This thread" << thread();
+    kpfInformation() << "MainWindow: receive testEvent with arg =" << text
+                     << "invoke thread is" << QThread::currentThread()
+                     << "it's belonging thread is" << thread()
+                     << ", main thread is" << qApp->thread();
     return text;
 }
 

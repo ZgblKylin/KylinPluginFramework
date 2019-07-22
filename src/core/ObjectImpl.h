@@ -5,16 +5,21 @@
 #include "TopicImpl.h"
 #include "Library.h"
 
+#ifdef Q_CC_MSVC
+#pragma warning(push)
+#pragma warning(disable:4250)
+#endif
+
 namespace Kpf {
 struct ConnectionImpl;
 
 struct ObjectImpl : public Object
 {
-    virtual ~ObjectImpl();
+    virtual ~ObjectImpl() override;
 
     static QSharedPointer<ObjectImpl> create(QSharedPointer<MetaClass> objectClass,
                                              const QString& name,
-                                             const QJsonObject& config);
+                                             const QDomElement& config);
 
     QSharedPointer<Library> library;
 
@@ -27,26 +32,26 @@ private:
     ObjectImpl();
 };
 
-class ObjectManagerImpl : public ObjectManager, public NotifyManagerImpl<IObjectNotifier>
+class ObjectManagerImpl : public ObjectManager, public NotifyManager<IObjectNotifier>
 {
     Q_OBJECT
 public:
     ObjectManagerImpl();
-    virtual ~ObjectManagerImpl();
+    virtual ~ObjectManagerImpl() override;
 
     static ObjectManagerImpl& instance();
 
     // ObjectManager interface
     virtual QStringList objectNames() const override;
     virtual QWeakPointer<Object> findObject(const QString& name) const override;
-    virtual QWeakPointer<Object> createObject(QString name, QString className, QJsonObject config = QJsonObject(), QObject* parent = qApp) override;
+    virtual QWeakPointer<Object> createObject(QString name, QString className, const QDomElement& config = QDomElement(), QObject* parent = qApp) override;
     virtual void destroyObject(const QString& name) override;
 
     QWeakPointer<ObjectImpl> currentObject();
 
-    QWeakPointer<Kpf::ObjectImpl> createObject(QString name, QString className, const QJsonObject& objectConfig, Ref<Ptr<QObject>> oParent = defaultObjectParent, Ref<Ptr<QWidget>> wParent = defaultWidgetParent);
-    QWeakPointer<Kpf::ObjectImpl> createObject(const QJsonObject& objectConfig, Ref<Ptr<QObject>> oParent = defaultObjectParent, Ref<Ptr<QWidget>> wParent = defaultWidgetParent);
-    bool createChildren(const QJsonValue& config, QObject* oParent = defaultObjectParent, QWidget* wParent = defaultWidgetParent);
+    QWeakPointer<Kpf::ObjectImpl> createObject(QString name, QString className, const QDomElement& objectConfig, Ref<Ptr<QObject>> oParent = defaultObjectParent, Ref<Ptr<QWidget>> wParent = defaultWidgetParent);
+    QWeakPointer<Kpf::ObjectImpl> createObject(const QDomElement& objectConfig, Ref<Ptr<QObject>> oParent = defaultObjectParent, Ref<Ptr<QWidget>> wParent = defaultWidgetParent);
+    bool createChildren(const QDomElement& config, QObject* oParent = defaultObjectParent, QWidget* wParent = defaultWidgetParent);
 
     void setObjectParent(QObject* object, const QString& parent, QObject* oParent, QWidget* wParent);
     bool setObjectProperty(QSharedPointer<Kpf::ObjectImpl>& object);
@@ -62,3 +67,7 @@ private:
 };
 } // namespace Kpf
 #define kpfObjectImpl Kpf::ObjectManagerImpl::instance()
+
+#ifdef Q_CC_MSVC
+#pragma warning(pop)
+#endif

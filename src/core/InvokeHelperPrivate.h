@@ -2,7 +2,7 @@
 #include <Kpf/Kpf.h>
 
 namespace Kpf {
-class ObjectImpl;
+struct ObjectImpl;
 class InvokeMethodSyncHelperPrivate : public QObject
 {
     Q_OBJECT

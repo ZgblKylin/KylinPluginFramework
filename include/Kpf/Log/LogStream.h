@@ -1,4 +1,4 @@
-#ifndef LOGSTREAM_H
+﻿#ifndef LOGSTREAM_H
 #define LOGSTREAM_H
 
 #include <functional>

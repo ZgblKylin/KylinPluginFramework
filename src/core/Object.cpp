@@ -63,7 +63,7 @@ Kpf::ObjectImpl::~ObjectImpl()
     kpfCInformation("Kpf") << "Object" << name << "destroyed";
 }
 
-QSharedPointer<Kpf::ObjectImpl> Kpf::ObjectImpl::create(QSharedPointer<MetaClass> objectClass, const QString& name, const QJsonObject& config)
+QSharedPointer<Kpf::ObjectImpl> Kpf::ObjectImpl::create(QSharedPointer<MetaClass> objectClass, const QString& name, const QDomElement& config)
 {
     QSharedPointer<ObjectImpl> ret(new ObjectImpl);
     QSharedPointer<MetaClassImpl> classImpl = objectClass.staticCast<MetaClassImpl>();
@@ -122,23 +122,27 @@ QWeakPointer<Kpf::Object> Kpf::ObjectManagerImpl::findObject(const QString& name
     return objects.value(name);
 }
 
-QWeakPointer<Kpf::Object> Kpf::ObjectManagerImpl::createObject(QString name, QString className, QJsonObject config, QObject* parent)
+QWeakPointer<Kpf::Object> Kpf::ObjectManagerImpl::createObject(QString name, QString className, const QDomElement& config, QObject* parent)
 {
     QMutexLocker locker(kpfMutex());
 
     if (className.isEmpty()) {
-        className = config.value(TAG_CLASS).toString();
+        className = config.attribute(KEY_CLASS);
     }
 
     if (name.isEmpty()) {
-        name = config.value(TAG_NAME).toString();
+        name = config.attribute(KEY_NAME);
         if (name.isEmpty()) {
             name = className + "_" + QUuid::createUuid().toString();
         }
     }
 
+    if (!parent) {
+        parent = qApp;
+    }
+
     QWidget* wParent = qobject_cast<QWidget*>(parent);
-    QWeakPointer<ObjectImpl> object = createObject(name, className, config, parent, wParent);
+    QWeakPointer<ObjectImpl> object = createObject(std::move(name), std::move(className), config, parent, wParent);
     if (object) {
         createChildren(config, parent, wParent);
     }
@@ -165,13 +169,13 @@ QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::currentObject()
     return currentObj;
 }
 
-QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(QString name, QString className, const QJsonObject& objectConfig, Ref<Ptr<QObject>> oParent, Ref<Ptr<QWidget>> wParent)
+QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(QString name, QString className, const QDomElement& objectConfig, Ref<Ptr<QObject>> oParent, Ref<Ptr<QWidget>> wParent)
 {
     QMutexLocker locker(kpfMutex());
-    Defer raii([this]{ currentObj.clear(); });
+    defer [this]{ currentObj.clear(); };
 
     if (name.isEmpty()) {
-        name = objectConfig.value(TAG_NAME).toString();
+        name = objectConfig.attribute(KEY_NAME);
         if (name.isEmpty()) {
             name = className + "_" + QUuid::createUuid().toString();
         }
@@ -227,7 +231,7 @@ QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(QString name,
     object->object->setProperty(PROPERTY_KPFOBJECT,
                                 QVariant::fromValue(object.toWeakRef()));
 
-    const QString parentName = objectConfig.value(TAG_PARENT).toString();
+    const QString parentName = objectConfig.attribute(KEY_PARENT);
     setObjectParent(object->object, parentName, oParent, wParent);
 
     QWidget* widgetPtr = qobject_cast<QWidget*>(object->object);
@@ -269,69 +273,48 @@ QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(QString name,
     return object;
 }
 
-QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(const QJsonObject& objectConfig, Ref<Ptr<QObject>> oParent, Ref<Ptr<QWidget>> wParent)
+QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(const QDomElement& objectConfig, Ref<Ptr<QObject>> oParent, Ref<Ptr<QWidget>> wParent)
 {
     QMutexLocker locker(kpfMutex());
-    return createObject(objectConfig.value(TAG_NAME).toString(),
-                        objectConfig.value(TAG_CLASS).toString(),
+    return createObject(objectConfig.attribute(KEY_NAME),
+                        objectConfig.attribute(KEY_CLASS),
                         objectConfig,
                         oParent,
                         wParent);
 }
 
-bool Kpf::ObjectManagerImpl::createChildren(const QJsonValue& config, QObject* oParent, QWidget* wParent)
+bool Kpf::ObjectManagerImpl::createChildren(const QDomElement& config, QObject* oParent, QWidget* wParent)
 {
     QMutexLocker locker(kpfMutex());
 
-    if (config.isObject())
+    if (config.tagName() == TAG_CLASS)
     {
-        QJsonObject objConfig = config.toObject();
-        for (auto it = objConfig.begin(); it != objConfig.end(); ++it)
-        {
-            QObject* o = oParent;
-            QWidget* w = wParent;
-            switch (it.value().type())
-            {
-            case QJsonValue::Object:
-            {
-                if (!createObject(it.value().toObject(), o, w)) {
-                    continue;
-                }
-            }
-                [[fallthrough]];
-            case QJsonValue::Array:
-                createChildren(it.value(), o, w);
-                break;
-            default:
-                break;
-            }
-        }
+        QObject* o = oParent;
+        QWidget* w = wParent;
+        createObject(config, o, w);
     }
-    else if (config.isArray())
+    for (QDomElement child = config.firstChildElement();
+         !child.isNull();
+         child = child.nextSiblingElement())
     {
-        QJsonArray arrConfig = config.toArray();
-        for (auto it = arrConfig.begin(); it != arrConfig.end(); ++it)
-        {
-            QObject* o = oParent;
-            QWidget* w = wParent;
-            switch ((*it).type())
-            {
-            case QJsonValue::Object:
-                if (!createObject((*it).toObject(), o, w)) {
-                    continue;
-                }
-                [[fallthrough]];
-            case QJsonValue::Array:
-                createChildren(*it, o, w);
-                break;
-            default:
-                break;
-            }
-        }
+        QObject* o = oParent;
+        QWidget* w = wParent;
+        createChildren(child, o, w);
     }
     return true;
 }
 
+template<typename T, typename U>
+void setParent(T* obj, U* parent)
+{
+    obj->setParent(parent);
+    kpfCLog("Kpf", 1) << "Parent of"
+                      << (std::is_base_of<QWidget, T>::value ? "QWidget" : "QObject")
+                      << obj->objectName()
+                      << "is set to"
+                      << (std::is_base_of<QWidget, U>::value ? "QWidget" : "QObject")
+                      << parent->objectName();
+}
 void Kpf::ObjectManagerImpl::setObjectParent(QObject* object, const QString& parent, QObject* oParent, QWidget* wParent)
 {
     QMutexLocker locker(kpfMutex());
@@ -347,43 +330,39 @@ void Kpf::ObjectManagerImpl::setObjectParent(QObject* object, const QString& par
                 {
                     QWidget* oWidget = qobject_cast<QWidget*>(object);
                     QWidget* pWidget = qobject_cast<QWidget*>(parentObj);
-                    oWidget->setParent(pWidget);
-                    kpfCLog("Kpf", 1) << "Parent of object" << object->objectName()
-                                      << "is set to QWidget" << pWidget->objectName();
+                    ::setParent(oWidget, pWidget);
                     return;
                 }
             }
             else
             {
-                object->setParent(parentObj);
-                kpfCLog("Kpf", 1) << "Parent of object" << object->objectName()
-                                  << "is set to QObject" << parentObj->objectName();
+                ::setParent(object, parentObj);
                 return;
             }
         }
     }
 
-    QWidget* w = qobject_cast<QWidget*>(object);
-    if (!w)
+    QWidget* widget = qobject_cast<QWidget*>(object);
+    if (!widget)
     {
-        if (oParent)
+        QLayout* layout = qobject_cast<QLayout*>(object);
+        if (layout && wParent)
         {
-            object->setParent(oParent);
-            kpfCLog("Kpf", 1) << "Parent of object" << object->objectName()
-                              << "is set to QObject" << oParent->objectName();
+            ::setParent(object, wParent);
+            wParent->setLayout(layout);
+        }
+        else if (oParent)
+        {
+            ::setParent(object, oParent);
         }
         else if (wParent)
         {
-            object->setParent(wParent);
-            kpfCLog("Kpf", 1) << "Parent of object" << object->objectName()
-                              << "is set to QWidget" << wParent->objectName();
+            ::setParent(object, wParent);
         }
     }
     else if (wParent)
     {
-        w->setParent(wParent);
-        kpfCLog("Kpf", 1) << "Parent of object" << object->objectName()
-                          << "is set to QWidget" << wParent->objectName();
+        ::setParent(widget, wParent);
     }
 }
 
@@ -391,22 +370,14 @@ bool Kpf::ObjectManagerImpl::setObjectProperty(QSharedPointer<ObjectImpl>& objec
 {
     QMutexLocker locker(kpfMutex());
 
-    for (auto it = object->config.constBegin();
-         it != object->config.constEnd();
-         ++it)
+    QDomNamedNodeMap attributes = object->config.attributes();
+    for (int i = 0; i < attributes.count(); ++i)
     {
-        switch (it.value().type())
-        {
-        case QJsonValue::Bool:
-        case QJsonValue::Double:
-        case QJsonValue::String:
-            break;
-        default:
-            continue;
-        }
+        QDomAttr attr = attributes.item(i).toAttr();
+
         QObject* objectPtr = object->object;
-        QString name = it.key();
-        QVariant value = it.value().toVariant();
+        QString name = attr.name();
+        QVariant value = attr.value();
 
         kpfCLog("Kpf", 1) << "Setup object" << object->name
                           << "for property" << name
@@ -442,7 +413,8 @@ bool Kpf::ObjectManagerImpl::initObject(QSharedPointer<ObjectImpl>& object)
 
     bool ok = false;
     bool ret = InvokeMethodSyncHelper(object->object, method)
-               .invoke({ object->config }, &ok).toBool();
+               .invoke({ QVariant::fromValue(object->config) }, &ok)
+               .toBool();
     if (ok && ret)
     {
         kpfCInformation("Kpf") << "Initialize object" << object->name

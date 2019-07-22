@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui xml
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 win32:CONFIG(release, debug|release): TARGET = KPF
@@ -44,6 +44,7 @@ HEADERS += \
     $$PWD/../../include/Kpf/EventHelper.h \
     $$PWD/../../include/Kpf/Log.h \
     $$PWD/../../include/Kpf/Kpf.h \
+    $$PWD/../../include/Kpf/Utils/DataSize.h \
     SignalSpy.h \
     ClassImpl.h \
     ThreadImpl.h \
@@ -58,7 +59,8 @@ HEADERS += \
     InvokeHelperPrivate.h \
     CommonPrivate.h \
     ConnectionImpl.h \
-    Library.h
+    Library.h \
+    RegisterQtClasses.h
 
 SOURCES += \
     CommonPrivate.cpp \
@@ -80,8 +82,10 @@ DISTFILES += \
     $$PWD/../../bin/components/KWidgets.json
 
 LIBS += -L$$PWD/../../lib
-win32:CONFIG(release, debug|release): LIBS += -lDebugging -lLog -lLogDebugOutput -lLogFileSaver -lLogDisplayWidget
-else:win32:CONFIG(debug, debug|release): LIBS += -lDebuggingd -lLogd -lLogDebugOutputd -lLogFileSaverd -lLogDisplayWidgetd
-else:unix:!macx: LIBS += -lDebugging -lLog -lLogDebugOutput -lLogFileSaver -lLogDisplayWidget
+win32:CONFIG(release, debug|release): LIBS += -lLog -lLogDebugOutput -lLogFileSaver -lLogDisplayWidget
+else:win32:CONFIG(debug, debug|release): LIBS += -lLogd -lLogDebugOutputd -lLogFileSaverd -lLogDisplayWidgetd
+else:unix:!macx: LIBS += -lLog -lLogDebugOutput -lLogFileSaver -lLogDisplayWidget
 
 DEPENDPATH += -L$$PWD/../../lib
+
+include(CoreDump/CoreDump.pri)

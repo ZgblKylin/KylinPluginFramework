@@ -78,95 +78,152 @@ bool Kpf::KpfCoreImpl::init(int argc, char *argv[])
 {
     QMutexLocker locker(kpfMutex());
 
+    // chech the call validity
     static bool inited = false;
-    if (inited) {
-        return true;
+    {
+        if (!qApp)
+        {
+            kpfCWarning("Kpf") << "QApplication must exist before call KpfCore::init";
+            return false;
+        }
+        if (inited) {
+            return true;
+        }
     }
 
     notify(&N::beginInitialization);
 
-    QSharedPointer<Thread> defaultThread = kpfThread.defaultThread()
-                                           .toStrongRef();
-    defaultThread->thread = qApp->thread();
-    defaultThread->eventBus->moveToThread(defaultThread->thread);
-
-    QObject::connect(qApp, &QCoreApplication::aboutToQuit,
-                     qApp, [this]{atExit();},
-                     Qt::DirectConnection);
-
-    qApp->setObjectName(qApp->metaObject()->className());
-
-    QByteArray env = qgetenv(PATH_STR);
-    if (!env.isEmpty()) {
-        env += ';';
-    }
-    env += QDir::toNativeSeparators(qApp->applicationDirPath()
-                                    + QDir::separator()
-                                    + DIR_PLUGINS);
-    qputenv(PATH_STR, env);
-
-    kpfObjectImpl.createObject(QStringLiteral("debugging"),
-                               QStringLiteral("Debugging"));
-
-    initLogger(argc, argv);
-    notify(&N::loggerInitialized);
-
-    if (!loadPlugins()) {
-        return false;
-    }
-
-    if (!loadComponent(QDir(qApp->applicationDirPath()
-                            + QDir::separator()
-                            + DIR_COMPONENTS))) {
-        return false;
-    }
-    for (auto it = componentsNode.begin();
-         it != componentsNode.end();
-         ++it)
+    // initialize default thread object
     {
-        expandComponents(it.value());
+        QSharedPointer<Thread> defaultThread = kpfThread.defaultThread()
+                                               .toStrongRef();
+        defaultThread->thread = qApp->thread();
+        defaultThread->eventBus->moveToThread(defaultThread->thread);
     }
-    kpfCInformation("Kpf") << "Replace components referenced in component files finished";
 
-    if (!loadAppConfig()) {
-        return false;
+    // initialize quit behavior
+    {
+        QObject::connect(qApp, &QCoreApplication::aboutToQuit,
+                         qApp, [this]{atExit();}, Qt::DirectConnection);
     }
-    notify(&N::appConfigLoaded);
 
-    QJsonValueRef value = rootNode[TAG_OBJECTS];
-    expandComponents(value);
-    objectsNode = value.toArray();
-    kpfCInformation("Kpf") << "Replace Objects components referenced in application config file finished";
-
-    value = rootNode[TAG_CONNECTIONS];
-    expandComponents(value);
-    connectionsNode = value.toArray();
-    kpfCInformation("Kpf") << "Replace Connections components referenced in application config file finished";
-
-    value = rootNode[TAG_INITIALIZATIONS];
-    expandComponents(value);
-    initializationsNode = value.toArray();
-    kpfCInformation("Kpf") << "Replace Initializations components referenced in application config file finished";
-
-    notify(&N::componentsExpanded);
-
-    kpfCInformation("Kpf") << "Start create objects";
-    if (!kpfObjectImpl.createChildren(objectsNode)) {
-        return false;
+    // add plugins dir to PATH
+    {
+        QString env;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+        env = qEnvironmentVariable(PATH_STR);
+#else
+        env = QString::fromLocal8Bit(qgetenv(PATH_STR));
+#endif
+        if (!env.isEmpty()) {
+            env += ';';
+        }
+        env += QDir::toNativeSeparators(qApp->applicationDirPath()
+                                        + QDir::separator()
+                                        + DIR_PLUGINS);
+        qputenv(PATH_STR, env.toLocal8Bit());
     }
-    kpfCInformation("Kpf") << "Create objects finished";
 
-    kpfCInformation("Kpf") << "Start initialize connections";
-    if (!initConnections()) {
-        return false;
+    // initialize error handler
+    {
+        kpfObjectImpl.createObject(QStringLiteral("CoreDump"),
+                                   QStringLiteral("CoreDump"));
     }
-    kpfCInformation("Kpf") << "Connections initialized";
 
-    kpfCInformation("Kpf") << "Start execute initialization methods";
-    if (!processInitializations()) {
-        return false;
+    // initialize logger
+    // TODO migrate to log4qt
+    {
+        initLogger(argc, argv);
+        notify(&N::loggerInitialized);
     }
-    kpfCInformation("Kpf") << "Initialization methods executed";
+
+    // load dynamic lib in plugins dir
+    {
+        if (!loadPlugins()) {
+            return false;
+        }
+    }
+
+    // load components= config files
+    {
+        if (!loadComponents(QDir(qApp->applicationDirPath()
+                                 + QDir::separator()
+                                 + DIR_COMPONENTS))) {
+            return false;
+        }
+        expandComponents();
+        kpfCInformation("Kpf") << "Replace components referenced in component files finished";
+    }
+
+    // load app config file
+    {
+        if (!loadAppConfig(FILE_APP)) {
+            return false;
+        }
+        qApp->setObjectName(qApp->metaObject()->className());
+        QString appName = rootNode.attribute(KEY_NAME, qApp->applicationDisplayName());
+        if (appName.isEmpty()) {
+            appName = QFileInfo(qApp->applicationFilePath()).completeBaseName();
+        }
+        qApp->setApplicationDisplayName(appName);
+        QDir dir(qApp->applicationDirPath());
+        dir.cd(DIR_STYLESHEETS);
+        QFile file(dir.absoluteFilePath(rootNode.attribute(KEY_QSS)));
+        if (file.exists())
+        {
+            if (file.open(QFile::ReadOnly | QFile::Text))
+            {
+                QByteArray qss = file.readAll();
+                file.close();
+                qApp->setStyleSheet(qss);
+            }
+        }
+        notify(&N::appConfigLoaded);
+    }
+
+    // expand components in app config file
+    {
+        objectsNode = rootNode.firstChildElement(TAG_OBJECTS);
+        expandComponent(objectsNode, objectsComponentsNode);
+        kpfCInformation("Kpf") << "Replace Objects components referenced in application config file finished";
+
+        connectionsNode = rootNode.firstChildElement(TAG_CONNECTIONS);
+        expandComponent(connectionsNode, connectionsComponentsNode);
+        kpfCInformation("Kpf") << "Replace Connections components referenced in application config file finished";
+
+        initializationsNode = rootNode.firstChildElement(TAG_INITIALIZATIONS);
+        expandComponent(initializationsNode, initializationsComponentsNode);
+        kpfCInformation("Kpf") << "Replace Initializations components referenced in application config file finished";
+
+        notify(&N::componentsExpanded);
+    }
+
+    // initialize objects
+    {
+        kpfCInformation("Kpf") << "Start create objects";
+        if (!kpfObjectImpl.createChildren(objectsNode)) {
+            return false;
+        }
+        kpfCInformation("Kpf") << "Create objects finished";
+    }
+
+    // initialize connections
+    {
+        kpfCInformation("Kpf") << "Start initialize connections";
+        if (!initConnections()) {
+            return false;
+        }
+        kpfCInformation("Kpf") << "Connections initialized";
+    }
+
+    // initialize initializations
+    {
+        kpfCInformation("Kpf") << "Start execute initialization methods";
+        if (!processInitializations()) {
+            return false;
+        }
+        kpfCInformation("Kpf") << "Initialization methods executed";
+    }
 
     kpfCInformation("Kpf") << "Initialization finished";
     inited = true;
@@ -179,6 +236,7 @@ bool Kpf::KpfCoreImpl::init(int argc, char *argv[])
 Kpf::KpfCoreImpl::KpfCoreImpl()
     : mtx(QMutex::Recursive)
 {
+    qRegisterMetaType<QDomElement>();
     classManagerImpl.reset(new ClassManagerImpl);
     threadManagerImpl.reset(new ThreadManagerImpl);
     objectManagerImpl.reset(new ObjectManagerImpl);
@@ -224,7 +282,7 @@ bool Kpf::KpfCoreImpl::loadPlugins()
     return true;
 }
 
-bool Kpf::KpfCoreImpl::loadAppConfig()
+bool Kpf::KpfCoreImpl::loadAppConfig(const QString& appFile)
 {
     QMutexLocker locker(kpfMutex());
 
@@ -232,7 +290,7 @@ bool Kpf::KpfCoreImpl::loadAppConfig()
                        + QDir::separator()
                        + DIR_CONFIG
                        + QDir::separator()
-                       + FILE_APP);
+                       + appFile);
     QFile file(fileInfo.absoluteFilePath());
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
@@ -240,36 +298,38 @@ bool Kpf::KpfCoreImpl::loadAppConfig()
                            << fileInfo.absoluteFilePath();
         return false;
     }
-    QByteArray json;
-    while (!file.atEnd())
-    {
-        QString jsonStr = QString::fromUtf8(file.readLine());
-        jsonStr.replace(QRegularExpression(QStringLiteral("\\s*(.*)[\\r\\n]*")),
-                        QStringLiteral("\\1"));
-        json += jsonStr.toUtf8();
-    }
+    QByteArray content = file.readAll();
+//    while (!file.atEnd())
+//    {
+//        QString jsonStr = QString::fromUtf8(file.readLine());
+//        jsonStr.replace(QRegularExpression(QStringLiteral("\\s*(.*)[\\r\\n]*")),
+//                        QStringLiteral("\\1"));
+//        content += jsonStr.toUtf8();
+//    }
     file.close();
 
-    QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(json, &error);
-    if (error.error != QJsonParseError::NoError)
+    QString errorMsg;
+    int errorLine = 0;
+    int errorColumn = 0;
+    QDomDocument doc;
+    if (!doc.setContent(content, &errorMsg, &errorLine, &errorColumn))
     {
-        int offset = std::max(0, error.offset - 20);
-        kpfCWarning("Kpf") << "Application config file" << fileInfo.absoluteFilePath() << "parse failed"
-                           << ", error reason" << error.errorString()
-                           << ", error position" << error.offset
-                           << ", error context:" << json.mid(offset, 40).constData();
+        kpfCWarning("Kpf")
+                << "Application config file" << fileInfo.absoluteFilePath()
+                << "parse failed at line" << errorLine
+                << "column" << errorColumn
+                << ", error reason" << errorMsg;
         return false;
     }
 
-    rootNode = doc.object();
+    rootNode = doc.documentElement();
 
     kpfCInformation("Kpf") << "Application config file loaded";
 
     return true;
 }
 
-bool Kpf::KpfCoreImpl::loadComponent(const QDir& dir)
+bool Kpf::KpfCoreImpl::loadComponents(const QDir& dir)
 {
     QMutexLocker locker(kpfMutex());
 
@@ -281,11 +341,11 @@ bool Kpf::KpfCoreImpl::loadComponent(const QDir& dir)
     {
 
         if (fileInfo.isDir()) {
-            loadComponent(QDir(fileInfo.absoluteFilePath()));
+            loadComponents(QDir(fileInfo.absoluteFilePath()));
             continue;
         }
 
-        if (fileInfo.suffix().toLower() != FILE_SUFFIX_JSON) {
+        if (fileInfo.suffix().toLower() != CONFIG_FILE_SUFFIX) {
             continue;
         }
 
@@ -293,44 +353,60 @@ bool Kpf::KpfCoreImpl::loadComponent(const QDir& dir)
         if (!file.open(QFile::ReadOnly | QFile::Text)) {
             continue;
         }
-        QByteArray json;
-        while (!file.atEnd())
-        {
-            QString jsonStr = QString::fromUtf8(file.readLine());
-            jsonStr.replace(QRegularExpression(QStringLiteral("\\s*(.*)[\\r\\n]*")),
-                            QStringLiteral("\\1"));
-            json += jsonStr.toUtf8();
-        }
+        QByteArray content = file.readAll();
+//        while (!file.atEnd())
+//        {
+//            QString contentStr = QString::fromUtf8(file.readLine());
+//            contentStr.replace(QRegularExpression(
+//                                   QStringLiteral("\\s*(.*)[\\r\\n]*")),
+//                               QStringLiteral("\\1"));
+//            content += contentStr.toUtf8();
+//        }
         file.close();
 
-        QJsonParseError error;
-        QJsonDocument doc = QJsonDocument::fromJson(json, &error);
-        if (error.error != QJsonParseError::NoError)
+        QString errorMsg;
+        int errorLine = 0;
+        int errorColumn = 0;
+        QDomDocument doc;
+        if (!doc.setContent(content, &errorMsg, &errorLine, &errorColumn))
         {
-            int offset = std::max(0, error.offset - 50);
-            kpfCWarning("Kpf") << "Component file" << fileInfo.absoluteFilePath() << "parse failed"
-                               << ", error reason" << error.errorString()
-                               << ", error position" << error.offset
-                               << ", error context:" << json.mid(offset, 100).constData();
+            kpfCWarning("Kpf")
+                    << "Component file" << fileInfo.absoluteFilePath()
+                    << "parse failed at line" << errorLine
+                    << "column" << errorColumn
+                    << ", error reason" << errorMsg;
             continue;
         }
 
-        QJsonObject root = doc.object().value(TAG_COMPONENTS).toObject();
-        for (auto it = root.constBegin(); it != root.constEnd(); ++it)
+        QDomElement root = doc.documentElement();
+        auto loadComponentNode =
+                [&root, fileInfo, this](const QString& tagName,
+                QMap<QString, QDomElement>& map)
         {
-            switch (it.value().type())
-            {
-            case QJsonValue::Object:
-            case QJsonValue::Array:
-                kpfCInformation("Kpf") << "Component loaded:" << it.key();
-                componentsNode.insert(it.key(),
-                                      it.value());
-                notify(&N::componentLoaded, fileInfo);
-                break;
-            default:
-                break;
+            QDomElement node = root.firstChildElement(tagName);
+            if (node.isNull()) {
+                return;
             }
-        }
+            for (QDomElement component = node.firstChildElement(TAG_COMPONENT);
+                 !component.isNull();
+                 component = component.nextSiblingElement(TAG_COMPONENT))
+            {
+                QString name = component.attribute(KEY_NAME);
+                if (name.isEmpty()) {
+                    continue;
+                }
+                QDomElement child = component.firstChildElement();
+                if (child.isNull()) {
+                    continue;
+                }
+                kpfCInformation("Kpf") << "Component loaded:" << name;
+                map.insert(name, child.cloneNode(true).toElement());
+                notify(&N::componentLoaded, fileInfo);
+            }
+        };
+        loadComponentNode(TAG_OBJECTS, objectsComponentsNode);
+        loadComponentNode(TAG_CONNECTIONS, connectionsComponentsNode);
+        loadComponentNode(TAG_INITIALIZATIONS, initializationsComponentsNode);
     }
 
     kpfCInformation("Kpf") << "Components in" << dir.absolutePath() << "load finished";
@@ -338,67 +414,57 @@ bool Kpf::KpfCoreImpl::loadComponent(const QDir& dir)
     return true;
 }
 
-template<typename Value>
-void Kpf::KpfCoreImpl::expandComponents(Value& value)
+void Kpf::KpfCoreImpl::expandComponents()
 {
+    auto expandComponentsMap = [this](QMap<QString, QDomElement>& map){
+        for (auto it = map.begin(); it != map.end(); ++it)
+        {
+            expandComponent(it.value(), map);
+        }
+    };
+    QMutexLocker locker(kpfMutex());
+    expandComponentsMap(objectsComponentsNode);
+    kpfCInformation("Kpf") << "Replace Object components referenced in compoent config files finished";
+    expandComponentsMap(connectionsComponentsNode);
+    kpfCInformation("Kpf") << "Replace Connection components referenced in compoent config files finished";
+    expandComponentsMap(initializationsComponentsNode);
+    kpfCInformation("Kpf") << "Replace Initialization components referenced in compoent config files finished";
+}
+
+void Kpf::KpfCoreImpl::expandComponent(QDomElement& node, QMap<QString, QDomElement>& map)
+{
+    auto copyNode = [](QDomElement& dst, const QDomElement& src){
+        dst.setTagName(src.tagName());
+        QDomNamedNodeMap attributes = src.attributes();
+        for (int i = 0; i < attributes.count(); ++i)
+        {
+            QDomAttr attr = attributes.item(i).toAttr();
+            dst.setAttribute(attr.name(), attr.value());
+        }
+        for (QDomElement child = src.firstChildElement();
+             !child.isNull();
+             child = child.nextSiblingElement())
+        {
+            dst.appendChild(child.cloneNode(true));
+        }
+    };
+
     QMutexLocker locker(kpfMutex());
 
-    switch (value.type())
+    for (QDomElement child = node.firstChildElement();
+         !child.isNull();
+         child = child.nextSiblingElement())
     {
-    case QJsonValue::Object:
-    {
-        QJsonObject object = value.toObject();
-        if (object.contains(TAG_COMPONENT)) {
-            expandObjectComponent(object);
-        }
-        for (QJsonObject::iterator it = object.begin(); it != object.end(); ++it)
+        if (child.tagName() == TAG_COMPONENT)
         {
-            QString key = it.key();
-            QJsonValueRef ref = it.value();
-            expandComponents(ref);
-        }
-        value = object;
-    }
-        break;
-
-    case QJsonValue::Array:
-    {
-        QJsonArray array = value.toArray();
-
-        QStack<QPair<int, QJsonArray>> arraysToBeReplaced;
-        for (int i = 0; i < array.count(); ++i)
-        {
-            QJsonValueRef ref = array[i];
-            if (ref.isString())
-            {
-                QJsonArray ret = expandStringComponent(ref);
-                if (!ret.isEmpty()) {
-                    arraysToBeReplaced.push(qMakePair(i, ret));
-                }
+            QString componentName = child.attribute(KEY_COMPONENT);
+            auto it = map.find(componentName);
+            if (it == map.end()) {
+                continue;
             }
-            else
-            {
-                expandComponents(ref);
-            }
+            copyNode(child, it.value());
         }
-
-        while (!arraysToBeReplaced.isEmpty())
-        {
-            const QPair<int, QJsonArray>& arrayToBeReplaced = arraysToBeReplaced.pop();
-            array.removeAt(arrayToBeReplaced.first);
-            for (int i = arrayToBeReplaced.second.count() - 1; i >= 0; --i)
-            {
-                array.insert(arrayToBeReplaced.first,
-                             arrayToBeReplaced.second.at(i));
-            }
-        }
-
-        value = array;
-    }
-        break;
-
-    default:
-        break;
+        expandComponent(child, map);
     }
 }
 
@@ -406,13 +472,12 @@ bool Kpf::KpfCoreImpl::initConnections()
 {
     QMutexLocker locker(kpfMutex());
 
-    for (const QJsonValue& value : connectionsNode)
+    for (QDomElement connection = connectionsNode
+         .firstChildElement(TAG_CONNECTION);
+         !connection.isNull();
+         connection = connection.nextSiblingElement(TAG_CONNECTION))
     {
-        if (!value.isObject()) {
-            continue;
-        }
-        QJsonObject connectionConfig = value.toObject();
-        kpfConnectionImpl.createConnection(connectionConfig);
+        kpfConnectionImpl.createConnection(connection);
     }
 
     return true;
@@ -422,14 +487,13 @@ bool Kpf::KpfCoreImpl::processInitializations()
 {
     QMutexLocker locker(kpfMutex());
 
-    for (int i = 0; i < initializationsNode.count(); ++i)
+    for (QDomElement initialization = initializationsNode
+         .firstChildElement(TAG_INITIALIZATION);
+         !initialization.isNull();
+         initialization = initialization.nextSiblingElement(TAG_INITIALIZATION))
     {
-        if (!initializationsNode.at(i).isObject()) {
-            continue;
-        }
-        QJsonObject initialization = initializationsNode.at(i).toObject();
-        QString objectName = initialization.value(TAG_OBJECT).toString();
-        QByteArray methodName = initialization.value(TAG_METHOD).toString().toUtf8();
+        QString objectName = initialization.attribute(KEY_OBJECT);
+        QByteArray methodName = initialization.attribute(KEY_METHO).toUtf8();
         methodName = QMetaObject::normalizedSignature(methodName);
 
         QSharedPointer<ObjectImpl> object = kpfObject.findObject(objectName)
@@ -478,58 +542,6 @@ bool Kpf::KpfCoreImpl::processInitializations()
                                << "successed";
     }
     return true;
-}
-
-void Kpf::KpfCoreImpl::expandObjectComponent(QJsonObject& element)
-{
-    QMutexLocker locker(kpfMutex());
-
-    QString name = element.value(TAG_COMPONENT).toString();
-    if (!componentsNode.contains(name)) {
-        return;
-    }
-
-    QJsonValue component = componentsNode.value(name);
-    if (!component.isObject()) {
-        return;
-    }
-
-    element.remove(TAG_COMPONENT);
-    QJsonObject object = component.toObject();
-    for (auto it = object.constBegin(); it != object.constEnd(); ++it)
-    {
-        if (!element.contains(it.key())) {
-            element[it.key()] = it.value();
-        }
-    }
-
-    // 递归调用，避免错过Component里嵌套使用的Component
-    for (QJsonObject::iterator it = element.begin(); it != element.end(); ++it)
-    {
-        QJsonValueRef ref = it.value();
-        expandComponents(ref);
-    }
-}
-
-QJsonArray Kpf::KpfCoreImpl::expandStringComponent(QJsonValueRef& ref)
-{
-    QMutexLocker locker(kpfMutex());
-
-    QString componentName = ref.toString();
-    QJsonValue component = componentsNode.value(componentName);
-    switch (component.type())
-    {
-    case QJsonValue::Object:
-        expandComponents(component); //< 递归子项
-        ref = component;
-        break;
-    case QJsonValue::Array:
-        expandComponents(component); //< 递归子项
-        return component.toArray();
-    default:
-        break;
-    }
-    return QJsonArray();
 }
 
 void Kpf::KpfCoreImpl::atExit()

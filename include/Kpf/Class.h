@@ -30,7 +30,7 @@ struct IClassNotifier
     virtual void classRegistered(const QString& className) { Q_UNUSED(className) }
 };
 
-class KPFSHARED_EXPORT ClassManager : public QObject, virtual public NotifyManager<IClassNotifier>
+class KPFSHARED_EXPORT ClassManager : public QObject, virtual public INotifyManager<IClassNotifier>
 {
     Q_OBJECT
 

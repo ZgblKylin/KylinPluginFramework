@@ -111,10 +111,10 @@ void Kpf::ThreadManagerImpl::setObjectThread(QSharedPointer<ObjectImpl>& object)
 
     QSharedPointer<ThreadImpl> thread = mainThread;
 
-    bool subThread = object->config.value(TAG_SUBTHREAD).toBool(false);
+    bool subThread = object->config.attribute(KEY_SUBTHREAD).toLower() == "true";
     if (subThread)
     {
-        QString threadName = object->config.value(TAG_THREADNAME).toString();
+        QString threadName = object->config.attribute(KEY_THREADNAME);
         thread = kpfThread.findThread(threadName)
                  .toStrongRef().staticCast<ThreadImpl>();
         if (!thread)

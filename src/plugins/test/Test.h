@@ -1,4 +1,4 @@
-#ifndef TEST_H
+﻿#ifndef TEST_H
 #define TEST_H
 
 #include <Kpf/Kpf.h>
@@ -19,7 +19,7 @@ public:
     explicit Test(QObject *parent = nullptr);
     ~Test();
 
-    Q_SLOT bool init(const QJsonObject& config);
+    Q_SLOT bool init(const QDomElement& config);
 
     Q_SLOT void start();
 

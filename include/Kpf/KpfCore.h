@@ -47,7 +47,7 @@ struct ICoreNotifier
 /**
  * @brief KpfCore类，KPF框架内核API声明
  */
-class KPFSHARED_EXPORT KpfCore : virtual public NotifyManager<ICoreNotifier>
+class KPFSHARED_EXPORT KpfCore : virtual public INotifyManager<ICoreNotifier>
 {
 public:
     virtual ~KpfCore() = default;

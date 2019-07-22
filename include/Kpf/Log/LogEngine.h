@@ -1,4 +1,4 @@
-#ifndef LOGENGINE_H
+﻿#ifndef LOGENGINE_H
 #define LOGENGINE_H
 
 #include "LogCommon.h"

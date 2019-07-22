@@ -2,13 +2,18 @@
 #include <Kpf/Kpf.h>
 #include "CommonPrivate.h"
 
+#ifdef Q_CC_MSVC
+#pragma warning(push)
+#pragma warning(disable:4250)
+#endif
+
 namespace Kpf {
 struct ObjectImpl;
-struct EventBus;
+class EventBus;
 
 struct ThreadImpl : public Thread
 {
-    virtual ~ThreadImpl();
+    virtual ~ThreadImpl() override;
 
     static QSharedPointer<ThreadImpl> create(const QString& name, bool externalThread = false);
 
@@ -18,13 +23,13 @@ private:
     ThreadImpl(bool externalThread);
 };
 
-class ThreadManagerImpl : public ThreadManager, public NotifyManagerImpl<IThreadNotifier>
+class ThreadManagerImpl : public ThreadManager, public NotifyManager<IThreadNotifier>
 {
     Q_OBJECT
 
 public:
     ThreadManagerImpl();
-    virtual ~ThreadManagerImpl();
+    virtual ~ThreadManagerImpl() override;
 
     static ThreadManagerImpl& instance();
 
@@ -43,3 +48,7 @@ private:
 };
 } // namespace Kpf
 #define kpfThreadImpl Kpf::ThreadManagerImpl::instance()
+
+#ifdef Q_CC_MSVC
+#pragma warning(pop)
+#endif
