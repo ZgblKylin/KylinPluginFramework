@@ -83,7 +83,8 @@ bool Kpf::KpfCoreImpl::init(int argc, char *argv[])
     {
         if (!qApp)
         {
-            kpfCWarning("Kpf") << "QApplication must exist before call KpfCore::init";
+            qCWarning(kpf) << "QApplication must exist before call "
+                              "KpfCore::init";
             return false;
         }
         if (inited) {
@@ -131,7 +132,6 @@ bool Kpf::KpfCoreImpl::init(int argc, char *argv[])
     }
 
     // initialize logger
-    // TODO migrate to log4qt
     {
         initLogger(argc, argv);
         notify(&N::loggerInitialized);
@@ -144,7 +144,7 @@ bool Kpf::KpfCoreImpl::init(int argc, char *argv[])
         }
     }
 
-    // load components= config files
+    // load components config files
     {
         if (!loadComponents(QDir(qApp->applicationDirPath()
                                  + QDir::separator()
@@ -152,7 +152,8 @@ bool Kpf::KpfCoreImpl::init(int argc, char *argv[])
             return false;
         }
         expandComponents();
-        kpfCInformation("Kpf") << "Replace components referenced in component files finished";
+        qCInfo(kpf) << "Replace components referenced in component files "
+                       "finished";
     }
 
     // load app config file
@@ -185,47 +186,50 @@ bool Kpf::KpfCoreImpl::init(int argc, char *argv[])
     {
         objectsNode = rootNode.firstChildElement(TAG_OBJECTS);
         expandComponent(objectsNode, objectsComponentsNode);
-        kpfCInformation("Kpf") << "Replace Objects components referenced in application config file finished";
+        qCInfo(kpf) << "Replace Objects components referenced in application "
+                       "config file finished";
 
         connectionsNode = rootNode.firstChildElement(TAG_CONNECTIONS);
         expandComponent(connectionsNode, connectionsComponentsNode);
-        kpfCInformation("Kpf") << "Replace Connections components referenced in application config file finished";
+        qCInfo(kpf) << "Replace Connections components referenced in "
+                       "application config file finished";
 
         initializationsNode = rootNode.firstChildElement(TAG_INITIALIZATIONS);
         expandComponent(initializationsNode, initializationsComponentsNode);
-        kpfCInformation("Kpf") << "Replace Initializations components referenced in application config file finished";
+        qCInfo(kpf) << "Replace Initializations components referenced in "
+                       "application config file finished";
 
         notify(&N::componentsExpanded);
     }
 
     // initialize objects
     {
-        kpfCInformation("Kpf") << "Start create objects";
+        qCInfo(kpf) << "Start create objects";
         if (!kpfObjectImpl.createChildren(objectsNode)) {
             return false;
         }
-        kpfCInformation("Kpf") << "Create objects finished";
+        qCInfo(kpf) << "Create objects finished";
     }
 
     // initialize connections
     {
-        kpfCInformation("Kpf") << "Start initialize connections";
+        qCInfo(kpf) << "Start initialize connections";
         if (!initConnections()) {
             return false;
         }
-        kpfCInformation("Kpf") << "Connections initialized";
+        qCInfo(kpf) << "Connections initialized";
     }
 
     // initialize initializations
     {
-        kpfCInformation("Kpf") << "Start execute initialization methods";
+        qCInfo(kpf) << "Start execute initialization methods";
         if (!processInitializations()) {
             return false;
         }
-        kpfCInformation("Kpf") << "Initialization methods executed";
+        qCInfo(kpf) << "Initialization methods executed";
     }
 
-    kpfCInformation("Kpf") << "Initialization finished";
+    qCInfo(kpf) << "Initialization finished";
     inited = true;
 
     notify(&N::initializationFinished);
@@ -268,10 +272,12 @@ bool Kpf::KpfCoreImpl::loadPlugins()
         currentLib = library;
         if (!library->library.load())
         {
-            kpfCWarning("Kpf") << "load plugin" << fileInfo.absoluteFilePath() << "failed";
+            qCWarning(kpf) << "load plugin" << fileInfo.absoluteFilePath()
+                           << "failed";
             continue;
         }
-        kpfCInformation("Kpf") << "load plugin" << fileInfo.absoluteFilePath() << "successed";
+        qCInfo(kpf) << "load plugin" << fileInfo.absoluteFilePath()
+                    << "successed";
         libraries.append(library);
 
         notify(&N::libraryLoaded, fileInfo);
@@ -294,8 +300,8 @@ bool Kpf::KpfCoreImpl::loadAppConfig(const QString& appFile)
     QFile file(fileInfo.absoluteFilePath());
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
-        kpfCWarning("Kpf") << "Cannot open application config file"
-                           << fileInfo.absoluteFilePath();
+        qCWarning(kpf) << "Cannot open application config file"
+                       << fileInfo.absoluteFilePath();
         return false;
     }
     QByteArray content = file.readAll();
@@ -311,10 +317,9 @@ bool Kpf::KpfCoreImpl::loadAppConfig(const QString& appFile)
     QString errorMsg;
     int errorLine = 0;
     int errorColumn = 0;
-    QDomDocument doc;
-    if (!doc.setContent(content, &errorMsg, &errorLine, &errorColumn))
+    if (!appConfig.setContent(content, &errorMsg, &errorLine, &errorColumn))
     {
-        kpfCWarning("Kpf")
+        qCWarning(kpf)
                 << "Application config file" << fileInfo.absoluteFilePath()
                 << "parse failed at line" << errorLine
                 << "column" << errorColumn
@@ -322,9 +327,9 @@ bool Kpf::KpfCoreImpl::loadAppConfig(const QString& appFile)
         return false;
     }
 
-    rootNode = doc.documentElement();
+    rootNode = appConfig.documentElement();
 
-    kpfCInformation("Kpf") << "Application config file loaded";
+    qCInfo(kpf) << "Application config file loaded";
 
     return true;
 }
@@ -333,7 +338,7 @@ bool Kpf::KpfCoreImpl::loadComponents(const QDir& dir)
 {
     QMutexLocker locker(kpfMutex());
 
-    kpfCInformation("Kpf") << "Start load components in" << dir.absolutePath();
+    qCInfo(kpf) << "Start load components in" << dir.absolutePath();
 
     for (const QFileInfo& fileInfo : dir.entryInfoList(QDir::NoDotAndDotDot
                                                        | QDir::Dirs
@@ -370,13 +375,14 @@ bool Kpf::KpfCoreImpl::loadComponents(const QDir& dir)
         QDomDocument doc;
         if (!doc.setContent(content, &errorMsg, &errorLine, &errorColumn))
         {
-            kpfCWarning("Kpf")
+            qCWarning(kpf)
                     << "Component file" << fileInfo.absoluteFilePath()
                     << "parse failed at line" << errorLine
                     << "column" << errorColumn
                     << ", error reason" << errorMsg;
             continue;
         }
+        componentsConfig.insert(fileInfo.completeBaseName(), doc);
 
         QDomElement root = doc.documentElement();
         auto loadComponentNode =
@@ -399,8 +405,8 @@ bool Kpf::KpfCoreImpl::loadComponents(const QDir& dir)
                 if (child.isNull()) {
                     continue;
                 }
-                kpfCInformation("Kpf") << "Component loaded:" << name;
-                map.insert(name, child.cloneNode(true).toElement());
+                qCInfo(kpf) << "Component loaded:" << name;
+                map.insert(name, child);
                 notify(&N::componentLoaded, fileInfo);
             }
         };
@@ -409,7 +415,7 @@ bool Kpf::KpfCoreImpl::loadComponents(const QDir& dir)
         loadComponentNode(TAG_INITIALIZATIONS, initializationsComponentsNode);
     }
 
-    kpfCInformation("Kpf") << "Components in" << dir.absolutePath() << "load finished";
+    qCInfo(kpf) << "Components in" << dir.absolutePath() << "load finished";
 
     return true;
 }
@@ -424,11 +430,14 @@ void Kpf::KpfCoreImpl::expandComponents()
     };
     QMutexLocker locker(kpfMutex());
     expandComponentsMap(objectsComponentsNode);
-    kpfCInformation("Kpf") << "Replace Object components referenced in compoent config files finished";
+    qCInfo(kpf) << "Replace Object components referenced in compoent config "
+                   "files finished";
     expandComponentsMap(connectionsComponentsNode);
-    kpfCInformation("Kpf") << "Replace Connection components referenced in compoent config files finished";
+    qCInfo(kpf) << "Replace Connection components referenced in compoent "
+                   "config files finished";
     expandComponentsMap(initializationsComponentsNode);
-    kpfCInformation("Kpf") << "Replace Initialization components referenced in compoent config files finished";
+    qCInfo(kpf) << "Replace Initialization components referenced in compoent "
+                   "config files finished";
 }
 
 void Kpf::KpfCoreImpl::expandComponent(QDomElement& node, QMap<QString, QDomElement>& map)
@@ -501,9 +510,9 @@ bool Kpf::KpfCoreImpl::processInitializations()
                                             .staticCast<ObjectImpl>();
         if (!object)
         {
-            kpfCWarning("Kpf") << "Initialization failed for object" << objectName
-                               << "with method" << methodName
-                               << ": cannot find object";
+            qCWarning(kpf) << "Initialization failed for object" << objectName
+                           << "with method" << methodName
+                           << ": cannot find object";
             continue;
         }
         const QMetaObject* metaObject = object->object->metaObject();
@@ -521,9 +530,9 @@ bool Kpf::KpfCoreImpl::processInitializations()
         }
         if (!find)
         {
-            kpfCWarning("Kpf") << "Initialization failed for object" << objectName
-                               << "with method" << methodName
-                               << ": cannot find method";
+            qCWarning(kpf) << "Initialization failed for object" << objectName
+                           << "with method" << methodName
+                           << ": cannot find method";
             continue;
         }
 
@@ -531,15 +540,14 @@ bool Kpf::KpfCoreImpl::processInitializations()
         InvokeMethodSyncHelper(object->object, method).invoke(&ok);
         if (!ok)
         {
-            kpfCWarning("Kpf") << "Initialization failed for object" << objectName
-                               << "with method" << methodName
-                               << ": method execute failed";
+            qCWarning(kpf) << "Initialization failed for object" << objectName
+                           << "with method" << methodName
+                           << ": method execute failed";
             continue;
         }
 
-        kpfCInformation("Kpf") << "Initialization for object" << objectName
-                               << "with method" << methodName
-                               << "successed";
+        qCInfo(kpf) << "Initialization for object" << objectName
+                    << "with method" << methodName << "successed";
     }
     return true;
 }
@@ -551,19 +559,6 @@ void Kpf::KpfCoreImpl::atExit()
     isClosingDown = true;
 
     notify(&N::aboutToQuit);
-
-    QStack<QSharedPointer<Library>> temp;
-    for (auto it = libraries.begin(); it != libraries.end(); ++it)
-    {
-        if ((*it)->objects.isEmpty())
-        {
-            temp.push(*it);
-            it = libraries.erase(it);
-            --it;
-        }
-    }
-
-    notify(&N::allObjectsDestroyed);
 
     connectionManagerImpl.reset(nullptr);
     notify(&N::connectionManagerDestroyed);
@@ -583,9 +578,9 @@ void Kpf::KpfCoreImpl::atExit()
     classManagerImpl.reset(nullptr);
     notify(&N::classManagerDestroyed);
 
-    while (!libraries.isEmpty()) {}
-    while (!temp.isEmpty()) {
-        temp.pop();
+    while (!libraries.isEmpty())
+    {
+        libraries.pop_back();
     }
     notify(&N::allLibraryUnloaded);
 

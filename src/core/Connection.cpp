@@ -43,13 +43,13 @@ const QWeakPointer<Kpf::Connection> Kpf::ConnectionManagerImpl::createConnection
                                         .staticCast<ObjectImpl>();
     if (!sender)
     {
-        kpfCWarning("Kpf") << "Create connection failed"
-                           << "from sender" << senderName
-                           << "of signal" << signalName
-                           << "to receiver" << receiverName
-                           << "of method" << slotName
-                           << "with type" << type
-                           << ": cannot find sender"<< senderName;
+        qCWarning(kpf) << "Create connection failed"
+                       << "from sender" << senderName
+                       << "of signal" << signalName
+                       << "to receiver" << receiverName
+                       << "of method" << slotName
+                       << "with type" << type
+                       << ": cannot find sender"<< senderName;
         return {};
     }
 
@@ -58,13 +58,13 @@ const QWeakPointer<Kpf::Connection> Kpf::ConnectionManagerImpl::createConnection
                                           .staticCast<ObjectImpl>();
     if(!receiver)
     {
-        kpfCWarning("Kpf") << "Create connection failed"
-                           << "from sender" << senderName
-                           << "of signal" << signalName
-                           << "to receiver" << receiverName
-                           << "of method" << slotName
-                           << "with type" << type
-                           << ": cannot find receiver"<< receiverName;
+        qCWarning(kpf) << "Create connection failed"
+                       << "from sender" << senderName
+                       << "of signal" << signalName
+                       << "to receiver" << receiverName
+                       << "of method" << slotName
+                       << "with type" << type
+                       << ": cannot find receiver"<< receiverName;
         return {};
     }
 
@@ -113,7 +113,7 @@ const QWeakPointer<Kpf::Connection> Kpf::ConnectionManagerImpl::createConnection
     QString slot = config.attribute(KEY_SLOT);
     QString type = config.attribute(KEY_TYPE, ConnectionTypes.key(Qt::AutoConnection));
     if(!ConnectionTypes.contains(type)) {
-        kpfCWarning("Kpf") << "无效发送类型" << type;
+        qCWarning(kpf) << "Invalid connection type" << type;
     }
 
     return createConnection(sender, signal, receiver, slot, ConnectionTypes.value(type));
@@ -162,12 +162,12 @@ void Kpf::ConnectionManagerImpl::removeConnection(QWeakPointer<Connection> conne
 
     disconnect(c->connection);
 
-    kpfCLog("Kpf", 1) << "Remove connection"
-                      << "from sender" << c->sender
-                      << "of signal" << c->signalName
-                      << "to receiver" << c->receiver
-                      << "of method" << c->slotName
-                      << "with type" << c->type;
+    qCDebug(kpf) << "Remove connection"
+                 << "from sender" << c->sender
+                 << "of signal" << c->signalName
+                 << "to receiver" << c->receiver
+                 << "of method" << c->slotName
+                 << "with type" << c->type;
     notify(&N::connectionRemoved, c->sender, c->signalName, c->receiver, c->slotName, c->type);
 }
 
@@ -195,24 +195,24 @@ QMetaObject::Connection Kpf::ConnectionManagerImpl::createConnection(const QStri
 
     if (!senderPtr)
     {
-        kpfCWarning("Kpf") << "Create connection failed"
-                           << "from sender" << senderName
-                           << "of signal" << signalName
-                           << "to receiver" << receiverName
-                           << "of method" << slotName
-                           << "with type" << type
-                           << ": sender is nullptr";
+        qCWarning(kpf) << "Create connection failed"
+                       << "from sender" << senderName
+                       << "of signal" << signalName
+                       << "to receiver" << receiverName
+                       << "of method" << slotName
+                       << "with type" << type
+                       << ": sender is nullptr";
         return {};
     }
     if(!receiverPtr)
     {
-        kpfCWarning("Kpf") << "Create connection failed"
-                           << "from sender" << senderName
-                           << "of signal" << signalName
-                           << "to receiver" << receiverName
-                           << "of method" << slotName
-                           << "with type" << type
-                           << ": receiver is nullptr";
+        qCWarning(kpf) << "Create connection failed"
+                       << "from sender" << senderName
+                       << "of signal" << signalName
+                       << "to receiver" << receiverName
+                       << "of method" << slotName
+                       << "with type" << type
+                       << ": receiver is nullptr";
         return {};
     }
 
@@ -232,13 +232,13 @@ QMetaObject::Connection Kpf::ConnectionManagerImpl::createConnection(const QStri
     }
     if (!find)
     {
-        kpfCWarning("Kpf") << "Create connection failed"
-                           << "from sender" << senderName
-                           << "of signal" << signalName
-                           << "to receiver" << receiverName
-                           << "of method" << slotName
-                           << "with type" << type
-                           << ": cannot find given signal in sender";
+        qCWarning(kpf) << "Create connection failed"
+                       << "from sender" << senderName
+                       << "of signal" << signalName
+                       << "to receiver" << receiverName
+                       << "of method" << slotName
+                       << "with type" << type
+                       << ": cannot find given signal in sender";
         return {};
     }
 
@@ -253,13 +253,13 @@ QMetaObject::Connection Kpf::ConnectionManagerImpl::createConnection(const QStri
     }
     if (!find)
     {
-        kpfCWarning("Kpf") << "Create connection failed"
-                           << "from sender" << senderName
-                           << "of signal" << signalName
-                           << "to receiver" << receiverName
-                           << "of method" << slotName
-                           << "with type" << type
-                           << ": cannot find given method in receiver";
+        qCWarning(kpf) << "Create connection failed"
+                       << "from sender" << senderName
+                       << "of signal" << signalName
+                       << "to receiver" << receiverName
+                       << "of method" << slotName
+                       << "with type" << type
+                       << ": cannot find given method in receiver";
         return {};
     }
 
@@ -270,13 +270,13 @@ QMetaObject::Connection Kpf::ConnectionManagerImpl::createConnection(const QStri
                                                  type);
     if (!connection)
     {
-        kpfCWarning("Kpf") << "Create connection failed"
-                           << "from sender" << senderName
-                           << "of signal" << signalName
-                           << "to receiver" << receiverName
-                           << "of method" << slotName
-                           << "with type" << type
-                           << ": signal and method are not compatible";
+        qCWarning(kpf) << "Create connection failed"
+                       << "from sender" << senderName
+                       << "of signal" << signalName
+                       << "to receiver" << receiverName
+                       << "of method" << slotName
+                       << "with type" << type
+                       << ": signal and method are not compatible";
     }
 
     notify(&N::connectionCreated, senderName, signalName.toUtf8(), receiverName, slotName.toUtf8(), type);

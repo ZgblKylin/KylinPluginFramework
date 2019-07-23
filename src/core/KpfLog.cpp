@@ -1,12 +1,22 @@
 ﻿#include "KpfLogPrivate.h"
 #include "KpfPrivate.h"
 
-using namespace Log::Impl;
-using namespace Kpf;
-
-ILogEngine* Kpf::getLogEngine()
+Kpf::LogDisplayPage::LogDisplayPage()
 {
-    return &(LogEngine::instance());
+    auto buffer = kpfObject.findObject<log4qt::LogDisplayBuffer>(
+                      QStringLiteral("LogDisplayBuffer"));
+    if (buffer) {
+        setBuffer(buffer);
+    }
+}
+
+Kpf::LogDisplayWidget::LogDisplayWidget()
+{
+    auto buffer = kpfObject.findObject<log4qt::LogDisplayBuffer>(
+                      QStringLiteral("LogDisplayBuffer"));
+    if (buffer) {
+        setBuffer(buffer);
+    }
 }
 
 void Kpf::initLogger(int argc, char* argv[])
@@ -14,18 +24,16 @@ void Kpf::initLogger(int argc, char* argv[])
     Q_UNUSED(argc)
     Q_UNUSED(argv)
 
-    ILogEngine* engine = getLogEngine();
-
-    engine->setCategoryFilter(QStringLiteral("Kpf"), 1);
-
-    LogDebugOutput* logDebugOutput;
-    logDebugOutput = kpfObject.createObject<LogDebugOutput>(
+    log4qt::LogDebugOutput* logDebugOutput;
+    logDebugOutput = kpfObject.createObject<log4qt::LogDebugOutput>(
                          QStringLiteral("logDebugOutput"),
                          QStringLiteral("LogDebugOutput"));
-    Q_UNUSED(logDebugOutput);
+    if (logDebugOutput) {
+        logDebugOutput->start();
+    }
 
-    LogFileMmapSaver* logFileMmapSaver;
-    logFileMmapSaver = kpfObject.createObject<LogFileMmapSaver>(
+    log4qt::LogFileMmapSaver* logFileMmapSaver;
+    logFileMmapSaver = kpfObject.createObject<log4qt::LogFileMmapSaver>(
                            QStringLiteral("logFileMmapSaver"),
                            QStringLiteral("LogFileMmapSaver"));
     if (logFileMmapSaver)
@@ -37,14 +45,17 @@ void Kpf::initLogger(int argc, char* argv[])
             dir.mkpath(dir.absolutePath());
         }
         logFileMmapSaver->setDir(dir.absolutePath());
-        logFileMmapSaver->setFilter(Log::Critical);
+        logFileMmapSaver->setFilter(QtCriticalMsg);
+        logFileMmapSaver->start();
     }
 
-    LogFileNormalSaver* logFileNormalSaver;
-    logFileNormalSaver = kpfObject.createObject<LogFileNormalSaver>(
+    log4qt::LogFileNormalSaver* logFileNormalSaver;
+    logFileNormalSaver = kpfObject.createObject<log4qt::LogFileNormalSaver>(
                              QStringLiteral("logFileNormalSaver"),
                              QStringLiteral("LogFileNormalSaver"));
-    Q_UNUSED(logFileNormalSaver);
+    if (logFileNormalSaver) {
+        logFileNormalSaver->start();
+    }
 
-    kpfCInformation("Kpf") << "Log engine initialized";
+    qCInfo(kpf) << "Log engine initialized";
 }

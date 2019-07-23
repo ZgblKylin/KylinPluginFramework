@@ -127,8 +127,8 @@ void Kpf::ThreadManagerImpl::setObjectThread(QSharedPointer<ObjectImpl>& object)
         object->object->setParent(nullptr);
         object->object->moveToThread(thread->thread);
 
-        kpfCLog("Kpf", 1) << "Move object" << object->name
-                          << "to thread" << threadName;
+        qCDebug(kpf) << "Move object" << object->name
+                     << "to thread" << threadName;
     }
 
     object->thread = thread;

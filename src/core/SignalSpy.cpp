@@ -4,8 +4,8 @@
 Kpf::SignalSpy::SignalSpy(QSharedPointer<Kpf::ObjectImpl>& object, const QByteArray& eventName)
     : signal(convertSignalName(eventName))
 {
-    kpfCLog("Kpf", 1) << "Create signal spy for object" << object->name
-                      << ", observing signal event" << eventName;
+    qCDebug(kpf) << "Create signal spy for object" << object->name
+                 << ", observing signal event" << eventName;
 
     const int memberOffset = QObject::staticMetaObject.methodCount();
 
@@ -13,8 +13,8 @@ Kpf::SignalSpy::SignalSpy(QSharedPointer<Kpf::ObjectImpl>& object, const QByteAr
     const int signalIndex = metaObject->indexOfMethod(eventName.constData());
     if (signalIndex < 0)
     {
-        kpfCWarning("Kpf") << "Create signal spy for object" << object->name
-                           << "failed: no such signal" << eventName;
+        qCWarning(kpf) << "Create signal spy for object" << object->name
+                       << "failed: no such signal" << eventName;
         return;
     }
 
@@ -25,8 +25,8 @@ Kpf::SignalSpy::SignalSpy(QSharedPointer<Kpf::ObjectImpl>& object, const QByteAr
                               Qt::AutoConnection,
                               nullptr))
     {
-        kpfCWarning("Kpf") << "Create signal spy for object" << object->name
-                           << "failed: QMetaObject::connect returned false";
+        qCWarning(kpf) << "Create signal spy for object" << object->name
+                       << "failed: QMetaObject::connect returned false";
         return;
     }
 

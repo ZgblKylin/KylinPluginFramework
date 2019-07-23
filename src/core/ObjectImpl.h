@@ -44,7 +44,7 @@ public:
     // ObjectManager interface
     virtual QStringList objectNames() const override;
     virtual QWeakPointer<Object> findObject(const QString& name) const override;
-    virtual QWeakPointer<Object> createObject(QString name, QString className, const QDomElement& config = QDomElement(), QObject* parent = qApp) override;
+    virtual QWeakPointer<Object> createObject(QString name, QString className, QDomElement config = QDomElement(), QObject* parent = qApp) override;
     virtual void destroyObject(const QString& name) override;
 
     QWeakPointer<ObjectImpl> currentObject();
@@ -52,6 +52,7 @@ public:
     QWeakPointer<Kpf::ObjectImpl> createObject(QString name, QString className, const QDomElement& objectConfig, Ref<Ptr<QObject>> oParent = defaultObjectParent, Ref<Ptr<QWidget>> wParent = defaultWidgetParent);
     QWeakPointer<Kpf::ObjectImpl> createObject(const QDomElement& objectConfig, Ref<Ptr<QObject>> oParent = defaultObjectParent, Ref<Ptr<QWidget>> wParent = defaultWidgetParent);
     bool createChildren(const QDomElement& config, QObject* oParent = defaultObjectParent, QWidget* wParent = defaultWidgetParent);
+    bool createChildren_withoutObject(const QDomElement& config, QObject* oParent = defaultObjectParent, QWidget* wParent = defaultWidgetParent);
 
     void setObjectParent(QObject* object, const QString& parent, QObject* oParent, QWidget* wParent);
     bool setObjectProperty(QSharedPointer<Kpf::ObjectImpl>& object);

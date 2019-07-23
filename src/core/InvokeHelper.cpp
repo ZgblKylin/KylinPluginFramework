@@ -1,4 +1,4 @@
-#include "InvokeHelperPrivate.h"
+﻿#include "InvokeHelperPrivate.h"
 #include "KpfPrivate.h"
 #include <typeinfo>
 
@@ -45,9 +45,9 @@ Kpf::InvokeMethodSyncHelperPrivate::InvokeMethodSyncHelperPrivate(InvokeMethodSy
         {
             invoked = true;
             function();
-            kpfCDebug("Kpf") << "Invoke object" << object->objectName()
-                             << "for function" << function.target_type().name()
-                             << "finished";
+            qCDebug(kpf) << "Invoke object" << object->objectName()
+                         << "for function" << function.target_type().name()
+                         << "finished";
         };
     }
     else
@@ -59,9 +59,9 @@ Kpf::InvokeMethodSyncHelperPrivate::InvokeMethodSyncHelperPrivate(InvokeMethodSy
         {
             invoked = true;
             emit invokeSignal(args);
-            kpfCDebug("Kpf") << "Invoke object" << object->objectName()
-                             << "for function" << function.target_type().name()
-                             << "finished";
+            qCDebug(kpf) << "Invoke object" << object->objectName()
+                         << "for function" << function.target_type().name()
+                         << "finished";
         };
     }
 }
@@ -75,10 +75,10 @@ Kpf::InvokeMethodSyncHelperPrivate::InvokeMethodSyncHelperPrivate(InvokeMethodSy
         {
             ret = function();
             invoked = true;
-            kpfCDebug("Kpf") << "Invoke object" << object->objectName()
-                             << "for function" << function.target_type().name()
-                             << "finished with return value"
-                             << ret;
+            qCDebug(kpf) << "Invoke object" << object->objectName()
+                         << "for function" << function.target_type().name()
+                         << "finished with return value"
+                         << ret;
         };
     }
     else
@@ -90,10 +90,10 @@ Kpf::InvokeMethodSyncHelperPrivate::InvokeMethodSyncHelperPrivate(InvokeMethodSy
         {
             emit invokeSignal(args);
             invoked = true;
-            kpfCDebug("Kpf") << "Invoke object" << object->objectName()
-                             << "for function" << function.target_type().name()
-                             << "finished with return value"
-                             << ret;
+            qCDebug(kpf) << "Invoke object" << object->objectName()
+                         << "for function" << function.target_type().name()
+                         << "finished with return value"
+                         << ret;
         };
     }
 }
@@ -162,17 +162,17 @@ void Kpf::InvokeMethodSyncHelperPrivate::invokeMethod(QVariantList args)
                                 arguments[9]);
         if (invoked)
         {
-            kpfCDebug("Kpf") << "Invoke object" << object->objectName()
+            qCDebug(kpf) << "Invoke object" << object->objectName()
                              << "for method" << method.methodSignature()
                              << "with params" << args
                              << "successed";
         }
         else
         {
-            kpfCDebug("Kpf") << "Invoke object" << object->objectName()
-                             << "for method" << method.methodSignature()
-                             << "with params" << args
-                             << "failed";
+            qCDebug(kpf) << "Invoke object" << object->objectName()
+                         << "for method" << method.methodSignature()
+                         << "with params" << args
+                         << "failed";
         }
     }
     else
@@ -194,18 +194,18 @@ void Kpf::InvokeMethodSyncHelperPrivate::invokeMethod(QVariantList args)
                                 arguments[9]);
         if (invoked)
         {
-            kpfCDebug("Kpf") << "Invoke object" << object->objectName()
-                             << "for method" << method.methodSignature()
-                             << "with params" << args
-                             << "successed with return value"
-                             << QVariant(QMetaType::type(retValue.name()), retValue.data());
+            qCDebug(kpf) << "Invoke object" << object->objectName()
+                         << "for method" << method.methodSignature()
+                         << "with params" << args
+                         << "successed with return value"
+                         << QVariant(QMetaType::type(retValue.name()), retValue.data());
         }
         else
         {
-            kpfCDebug("Kpf") << "Invoke object" << object->objectName()
-                             << "for method" << method.methodSignature()
-                             << "with params" << args
-                             << "failed";
+            qCDebug(kpf) << "Invoke object" << object->objectName()
+                         << "for method" << method.methodSignature()
+                         << "with params" << args
+                         << "failed";
         }
     }
 }

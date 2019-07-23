@@ -1,6 +1,5 @@
-#include "Library.h"
-#include "ClassImpl.h"
-#include "ObjectImpl.h"
+﻿#include "Library.h"
+#include "KpfPrivate.h"
 
 Kpf::Library::Library(const QFileInfo& info)
     : fileInfo(info),
@@ -13,7 +12,7 @@ Kpf::Library::Library(const QFileInfo& info)
 Kpf::Library::~Library()
 {
     library.unload();
-    kpfCInformation("Kpf") << "Library"
-                           << fileInfo.absoluteFilePath()
-                           << "unloaded";
+    qCInfo(kpf) << "Library"
+                << fileInfo.absoluteFilePath()
+                << "unloaded";
 }

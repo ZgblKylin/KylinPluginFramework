@@ -20,6 +20,8 @@
 
     <Component name="mainWindow">
       <Class class="MainWindow" name="mainWindow">
+<!--        <CentralWidget class="LogDisplayWidget">-->
+<!--        </CentralWidget>-->
         <SubEvent eventId="TestEvent" topic="TestEvent"/>
         <Component component="test"/>
       </Class>

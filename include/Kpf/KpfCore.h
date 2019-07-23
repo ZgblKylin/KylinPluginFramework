@@ -33,7 +33,6 @@ struct ICoreNotifier
     virtual void componentsExpanded() {}
 
     virtual void aboutToQuit() {}
-    virtual void allObjectsDestroyed() {}
     virtual void connectionManagerDestroyed() {}
     virtual void topicManagerDestroyed() {}
     virtual void eventManagerDestroyed() {}

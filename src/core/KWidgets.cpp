@@ -39,7 +39,7 @@ void initMargins(QLayout* layout, const QDomElement& config)
     }
 }
 
-QList<Kpf::Object*> initObjects(QObject* parent, const QDomElement& config)
+QList<Kpf::Object*> initObjects(QObject* parent, QDomElement config)
 {
     QList<Kpf::Object*> objects;
     for (QDomElement child = config.firstChildElement(Kpf::TAG_CLASS);
@@ -52,10 +52,12 @@ QList<Kpf::Object*> initObjects(QObject* parent, const QDomElement& config)
         if (!object) {
             continue;
         }
+        config.setAttribute(Kpf::KEY_ALREADYEXIST, object->name);
+        object->object->setProperty(Kpf::KEY_ALREADYEXIST.toUtf8().constData(),
+                                    object->name);
         if (!object->object->inherits("QWidget")
             && !object->object->inherits("QLayout"))
         {
-            kpfObject.destroyObject(object->name);
             continue;
         }
 
@@ -93,20 +95,21 @@ bool initBoxLayout(QBoxLayout* layout, const QDomElement& config)
 
         int stretch = object->object->property(TAG_STRETCH.toUtf8().constData()).toInt();
 
-        if (widget) {
+        if (widget)
+        {
             layout->addWidget(widget, stretch);
-        } else if (subLayout) {
+        }
+        else if (subLayout)
+        {
             subLayout->setParent(nullptr);
             layout->addLayout(subLayout, stretch);
-        } else {
-            kpfObject.destroyObject(object->name);
         }
     }
 
     return true;
 }
 
-void addMenuItem(QObject* parent, const QDomElement& config)
+void addMenuItem(QObject* parent, QDomElement config)
 {
     QMenuBar* menuBar = qobject_cast<QMenuBar*>(parent);
     QToolBar* toolBar = qobject_cast<QToolBar*>(parent);
@@ -128,6 +131,9 @@ void addMenuItem(QObject* parent, const QDomElement& config)
         if (!subMenu) {
             return;
         }
+        config.setAttribute(Kpf::KEY_ALREADYEXIST, subMenu->objectName());
+        subMenu->setProperty(Kpf::KEY_ALREADYEXIST.toUtf8().constData(),
+                             subMenu->objectName());
 
         QString text = config.attribute(Kpf::KEY_TEXT);
         subMenu->setTitle(text);
@@ -160,6 +166,9 @@ void addMenuItem(QObject* parent, const QDomElement& config)
         if (!subAction) {
             return;
         }
+        config.setAttribute(Kpf::KEY_ALREADYEXIST, subAction->objectName());
+        subAction->setProperty(Kpf::KEY_ALREADYEXIST.toUtf8().constData(),
+                               subAction->objectName());
 
         QString text = config.attribute(Kpf::KEY_TEXT);
         subAction->setText(text);
@@ -200,14 +209,10 @@ void addMenuItem(QObject* parent, const QDomElement& config)
             return;
         }
 
-        QWidget* widget = kpfObject.createObject<QWidget>(config, parent);
-        if (!widget) {
-            return;
-        }
-
         QString name = config.attribute(Kpf::KEY_NAME);
         QWidgetAction* widgetAction = kpfObject.createObject<QWidgetAction>(
-                                          QStringLiteral("widgetAction_") + name,
+                                          QStringLiteral("widgetAction_")
+                                          + name,
                                           QStringLiteral("QWidgetAction"),
                                           config,
                                           parent);
@@ -262,7 +267,7 @@ KFormLayout::KFormLayout(QWidget* parent)
 {
 }
 
-bool KFormLayout::init(const QDomElement& config)
+bool KFormLayout::init(QDomElement config)
 {
     if (!initLayoutParent(this)) {
         return false;
@@ -297,15 +302,17 @@ bool KFormLayout::init(const QDomElement& config)
         if (!object) {
             continue;
         }
+        fieldConfig.setAttribute(Kpf::KEY_ALREADYEXIST, object->name);
+        object->object->setProperty(Kpf::KEY_ALREADYEXIST.toUtf8().constData(),
+                                    object->name);
+
         Object obj;
         obj.widget = qobject_cast<QWidget*>(object->object);
         obj.layout = qobject_cast<QLayout*>(object->object);
         if (obj.layout) {
             obj.layout->setParent(nullptr);
         }
-        if (!obj.widget || !obj.layout)
-        {
-            kpfObject.destroyObject(object->name);
+        if (!obj.widget || !obj.layout) {
             continue;
         }
 
@@ -314,6 +321,14 @@ bool KFormLayout::init(const QDomElement& config)
         {
             obj.label.text = labelConfig.attribute(Kpf::KEY_TEXT);
             obj.widget = kpfObject.createObject<QWidget>(labelConfig, this);
+            if (obj.widget)
+            {
+                labelConfig.setAttribute(Kpf::KEY_ALREADYEXIST,
+                                         obj.widget->objectName());
+                obj.widget->setProperty(Kpf::KEY_ALREADYEXIST
+                                        .toUtf8().constData(),
+                                        obj.widget->objectName());
+            }
         }
 
         objects.append(obj);
@@ -377,10 +392,6 @@ bool KGridLayout::init(const QDomElement& config)
             layout->setParent(nullptr);
             addLayout(layout, row, column, rowSpan, columnSpan);
         }
-        else
-        {
-            kpfObject.destroyObject(object->name);
-        }
     }
 
     return true;
@@ -405,8 +416,6 @@ bool KStackedLayout::init(const QDomElement& config)
         QWidget* widget = qobject_cast<QWidget*>(object->object);
         if (widget) {
             addWidget(widget);
-        } else {
-            kpfObject.destroyObject(object->name);
         }
     }
 
@@ -426,8 +435,6 @@ bool KStackedWidget::init(const QDomElement& config)
         QWidget* widget = qobject_cast<QWidget*>(object->object);
         if (widget) {
             addWidget(widget);
-        } else {
-            kpfObject.destroyObject(object->name);
         }
     }
 
@@ -445,19 +452,15 @@ bool KTabWidget::init(const QDomElement& config)
     for (Kpf::Object* object : objects)
     {
         QWidget* widget = qobject_cast<QWidget*>(object->object);
-        if (widget)
-        {
-            QString title = widget->property(TAG_TAB.toUtf8().constData())
-                            .toString();
-            if (title.isEmpty()) {
-                title = widget->objectName();
-            }
-            addTab(widget, title);
+        if (!widget) {
+            continue;
         }
-        else
-        {
-            kpfObject.destroyObject(object->name);
+        QString title = widget->property(TAG_TAB.toUtf8().constData())
+                        .toString();
+        if (title.isEmpty()) {
+            title = widget->objectName();
         }
+        addTab(widget, title);
     }
 
     return true;
@@ -474,16 +477,12 @@ bool KListWidget::init(const QDomElement& config)
     for (Kpf::Object* object : objects)
     {
         QWidget* widget = qobject_cast<QWidget*>(object->object);
-        if (widget)
-        {
-            QListWidgetItem* item = new QListWidgetItem;
-            addItem(item);
-            setItemWidget(item, widget);
+        if (!widget) {
+            continue;
         }
-        else
-        {
-            kpfObject.destroyObject(object->name);
-        }
+        QListWidgetItem* item = new QListWidgetItem;
+        addItem(item);
+        setItemWidget(item, widget);
     }
 
     return true;
@@ -568,12 +567,15 @@ KWidgetAction::KWidgetAction(QObject* parent)
 {
 }
 
-bool KWidgetAction::init(const QDomElement& config)
+bool KWidgetAction::init(QDomElement config)
 {
     QWidget* widget = kpfObject.createObject<QWidget>(config, this);
     if (!widget) {
         return false;
     }
+    config.setAttribute(Kpf::KEY_ALREADYEXIST, widget->objectName());
+    widget->setProperty(Kpf::KEY_ALREADYEXIST.toUtf8().constData(),
+                        widget->objectName());
 
     setDefaultWidget(widget);
     return true;
@@ -585,12 +587,16 @@ KMainWindow::KMainWindow(QWidget* parent, Qt::WindowFlags flags)
 {
 }
 
-bool KMainWindow::init(const QDomElement& config)
+bool KMainWindow::init(QDomElement config)
 {
     QDomElement menuBarConfig = config.firstChildElement(TAG_MENUBAR);
     QMenuBar* menuBar = kpfObject.createObject<QMenuBar>(menuBarConfig,
                                                          this);
-    if (menuBar) {
+    if (menuBar)
+    {
+        menuBarConfig.setAttribute(Kpf::KEY_ALREADYEXIST, menuBar->objectName());
+        menuBar->setProperty(Kpf::KEY_ALREADYEXIST.toUtf8().constData(),
+                             menuBar->objectName());
         setMenuBar(menuBar);
     }
 
@@ -600,20 +606,35 @@ bool KMainWindow::init(const QDomElement& config)
          subToolBar = subToolBar.nextSiblingElement(Kpf::TAG_CLASS))
     {
         QToolBar* toolBar = kpfObject.createObject<QToolBar>(subToolBar, this);
-        if (toolBar) {
+        if (toolBar)
+        {
+            subToolBar.setAttribute(Kpf::KEY_ALREADYEXIST,
+                                    toolBar->objectName());
+            toolBar->setProperty(Kpf::KEY_ALREADYEXIST.toUtf8().constData(),
+                                 toolBar->objectName());
             addToolBar(toolBar);
         }
     }
 
     QDomElement centralWidgetConfig = config.firstChildElement(TAG_CENTRALWIDGET);
     QWidget* centralWidget = kpfObject.createObject<QWidget>(centralWidgetConfig, this);
-    if (centralWidget) {
+    if (centralWidget)
+    {
+        centralWidgetConfig.setAttribute(Kpf::KEY_ALREADYEXIST,
+                                         centralWidget->objectName());
+        centralWidget->setProperty(Kpf::KEY_ALREADYEXIST.toUtf8().constData(),
+                                   centralWidget->objectName());
         setCentralWidget(centralWidget);
     }
 
     QDomElement statusBarConfig = config.firstChildElement(TAG_STATUSBAR);
     QStatusBar* statusBar = kpfObject.createObject<QStatusBar>(statusBarConfig, this);
-    if (statusBar) {
+    if (statusBar)
+    {
+        statusBarConfig.setAttribute(Kpf::KEY_ALREADYEXIST,
+                                     statusBar->objectName());
+        statusBar->setProperty(Kpf::KEY_ALREADYEXIST.toUtf8().constData(),
+                               statusBar->objectName());
         setStatusBar(statusBar);
     }
 

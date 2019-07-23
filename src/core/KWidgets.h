@@ -47,7 +47,7 @@ class KFormLayout : public QFormLayout
     Q_OBJECT
 public:
     explicit KFormLayout(QWidget* parent = nullptr);
-    Q_SLOT bool init(const QDomElement& config);
+    Q_SLOT bool init(QDomElement config);
 };
 KPF_REGISTER_CLASS(KFormLayout, QFormLayout)
 
@@ -119,7 +119,7 @@ class KWidgetAction : public QWidgetAction
     Q_OBJECT
 public:
     explicit KWidgetAction(QObject* parent = nullptr);
-    Q_SLOT bool init(const QDomElement& config);
+    Q_SLOT bool init(QDomElement config);
 };
 KPF_REGISTER_CLASS(KWidgetAction, QWidgetAction)
 
@@ -154,8 +154,8 @@ class KMainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    explicit KMainWindow(QWidget* parent = nullptr, Qt::WindowFlags flags = 0);
-    Q_SLOT bool init(const QDomElement& config);
+    explicit KMainWindow(QWidget* parent = nullptr, Qt::WindowFlags flags = nullptr);
+    Q_SLOT bool init(QDomElement config);
     Q_SIGNAL void closed();
     // QWidget interface
 protected:

@@ -1,20 +1,30 @@
 ﻿#pragma once
 #include <Kpf/Kpf.h>
-#include <Kpf/Log.h>
-#include <Kpf/Log/Processor/LogDebugOutput.h>
-#include <Kpf/Log/Processor/LogFileNormalSaver.h>
-#include <Kpf/Log/Processor/LogFileMmapSaver.h>
-#include <Kpf/Log/Processor/LogDisplayBuffer.h>
-#include <Kpf/Log/Processor/LogDisplayPage.h>
-#include <Kpf/Log/Processor/LogDisplayWidget.h>
-
-KPF_REGISTER_CLASS(Log::Impl::LogDebugOutput, LogDebugOutput)
-KPF_REGISTER_CLASS(Log::Impl::LogFileNormalSaver, LogFileNormalSaver)
-KPF_REGISTER_CLASS(Log::Impl::LogFileMmapSaver, LogFileMmapSaver)
-KPF_REGISTER_CLASS(Log::Impl::LogDisplayBuffer, LogDisplayBuffer)
-KPF_REGISTER_CLASS(Log::Impl::LogDisplayPage, LogDisplayPage)
-KPF_REGISTER_CLASS(Log::Impl::LogDisplayWidget, LogDisplayWidget)
+#include <processors/LogDebugOutput.h>
+#include <processors/LogFileSaver.h>
+#include <processors/LogDisplayWidget.h>
 
 namespace Kpf {
+class LogDisplayPage : public log4qt::LogDisplayPage
+{
+    Q_OBJECT
+public:
+    LogDisplayPage();
+};
+
+class LogDisplayWidget : public log4qt::LogDisplayWidget
+{
+    Q_OBJECT
+public:
+    LogDisplayWidget();
+};
+
 void initLogger(int argc, char* argv[]);
 } // namespace Kpf
+
+KPF_REGISTER_CLASS(log4qt::LogDebugOutput, LogDebugOutput)
+KPF_REGISTER_CLASS(log4qt::LogFileNormalSaver, LogFileNormalSaver)
+KPF_REGISTER_CLASS(log4qt::LogFileMmapSaver, LogFileMmapSaver)
+KPF_REGISTER_CLASS(log4qt::LogDisplayBuffer, LogDisplayBuffer)
+KPF_REGISTER_CLASS(Kpf::LogDisplayPage, LogDisplayPage)
+KPF_REGISTER_CLASS(Kpf::LogDisplayWidget, LogDisplayWidget)

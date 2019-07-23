@@ -74,7 +74,7 @@ public:
      * @param parent 对象的父对象
      * @return 构造的新对象，若构造失败，返回nullptr
      */
-    virtual QWeakPointer<Object> createObject(QString name, QString className, const QDomElement& config = QDomElement(), QObject* parent = qApp) = 0;
+    virtual QWeakPointer<Object> createObject(QString name, QString className, QDomElement config = QDomElement(), QObject* parent = qApp) = 0;
     QWeakPointer<Object> createObject(QString className, const QDomElement& config = QDomElement(), QObject* parent = qApp);
     QWeakPointer<Object> createObject(const QDomElement& config, QObject* parent = qApp);
     template<typename T>

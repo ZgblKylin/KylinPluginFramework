@@ -7,13 +7,13 @@
 QT       += core gui xml
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-win32:CONFIG(release, debug|release): TARGET = KPF
-else:win32:CONFIG(debug, debug|release): TARGET = KPFd
-else:unix:!macx: TARGET = KPF
+CONFIG(release, debug|release): TARGET = KPF
+else:CONFIG(debug, debug|release): TARGET = KPFd
 
-DESTDIR = $$PWD/../../lib
 TEMPLATE = lib
 CONFIG += c++11
+
+DESTDIR = $$PWD/../../bin
 
 DEFINES += KPF_LIBRARY
 
@@ -42,9 +42,7 @@ HEADERS += \
     $$PWD/../../include/Kpf/Class.h \
     $$PWD/../../include/Kpf/KpfCore.h \
     $$PWD/../../include/Kpf/EventHelper.h \
-    $$PWD/../../include/Kpf/Log.h \
     $$PWD/../../include/Kpf/Kpf.h \
-    $$PWD/../../include/Kpf/Utils/DataSize.h \
     SignalSpy.h \
     ClassImpl.h \
     ThreadImpl.h \
@@ -81,11 +79,7 @@ SOURCES += \
 DISTFILES += \
     $$PWD/../../bin/components/KWidgets.json
 
-LIBS += -L$$PWD/../../lib
-win32:CONFIG(release, debug|release): LIBS += -lLog -lLogDebugOutput -lLogFileSaver -lLogDisplayWidget
-else:win32:CONFIG(debug, debug|release): LIBS += -lLogd -lLogDebugOutputd -lLogFileSaverd -lLogDisplayWidgetd
-else:unix:!macx: LIBS += -lLog -lLogDebugOutput -lLogFileSaver -lLogDisplayWidget
-
-DEPENDPATH += -L$$PWD/../../lib
-
 include(CoreDump/CoreDump.pri)
+
+DEFINES += LOG4QT_STATIC
+include(../../log4qt/src/log4qt.pri)

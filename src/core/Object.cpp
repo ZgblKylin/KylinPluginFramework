@@ -60,7 +60,7 @@ Kpf::ObjectImpl::~ObjectImpl()
             kpfCoreImpl.removeLibrary(library);
         }
     }
-    kpfCInformation("Kpf") << "Object" << name << "destroyed";
+    qCInfo(kpf) << "Object" << name << "destroyed";
 }
 
 QSharedPointer<Kpf::ObjectImpl> Kpf::ObjectImpl::create(QSharedPointer<MetaClass> objectClass, const QString& name, const QDomElement& config)
@@ -122,7 +122,7 @@ QWeakPointer<Kpf::Object> Kpf::ObjectManagerImpl::findObject(const QString& name
     return objects.value(name);
 }
 
-QWeakPointer<Kpf::Object> Kpf::ObjectManagerImpl::createObject(QString name, QString className, const QDomElement& config, QObject* parent)
+QWeakPointer<Kpf::Object> Kpf::ObjectManagerImpl::createObject(QString name, QString className, QDomElement config, QObject* parent)
 {
     QMutexLocker locker(kpfMutex());
 
@@ -130,10 +130,23 @@ QWeakPointer<Kpf::Object> Kpf::ObjectManagerImpl::createObject(QString name, QSt
         className = config.attribute(KEY_CLASS);
     }
 
-    if (name.isEmpty()) {
+    if (name.isEmpty())
+    {
         name = config.attribute(KEY_NAME);
-        if (name.isEmpty()) {
+        if (name.isEmpty())
+        {
+            const QString alreadyExist = config.attribute(KEY_ALREADYEXIST);
+            if (!alreadyExist.isEmpty())
+            {
+                QWeakPointer<Kpf::Object> object = findObject(alreadyExist);
+                if (object) {
+                    return object;
+                }
+            }
+
             name = className + "_" + QUuid::createUuid().toString();
+            config.setAttribute(KEY_ALREADYEXIST,
+                                QStringLiteral("name"));
         }
     }
 
@@ -144,7 +157,7 @@ QWeakPointer<Kpf::Object> Kpf::ObjectManagerImpl::createObject(QString name, QSt
     QWidget* wParent = qobject_cast<QWidget*>(parent);
     QWeakPointer<ObjectImpl> object = createObject(std::move(name), std::move(className), config, parent, wParent);
     if (object) {
-        createChildren(config, parent, wParent);
+        createChildren_withoutObject(config, parent, wParent);
     }
 
     return object;
@@ -174,19 +187,36 @@ QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(QString name,
     QMutexLocker locker(kpfMutex());
     defer [this]{ currentObj.clear(); };
 
-    if (name.isEmpty()) {
-        name = objectConfig.attribute(KEY_NAME);
-        if (name.isEmpty()) {
-            name = className + "_" + QUuid::createUuid().toString();
+    const QString alreadyExist = objectConfig.attribute(KEY_ALREADYEXIST);
+    if (!alreadyExist.isEmpty())
+    {
+        QWeakPointer<Kpf::Object> object = findObject(alreadyExist);
+        if (object) {
+            return object.toStrongRef().staticCast<Kpf::ObjectImpl>();
         }
     }
 
-    if (objects.contains(name))
+    if (name.isEmpty())
     {
-        kpfCWarning("Kpf") << "Object create failed for"
-                           << "name" << name
-                           << "with type" << className
-                           << ": object already exists";
+        qCWarning(kpf) << "Object create failed for"
+                       << "type" << className
+                       << ": object name is empty";
+        return {};
+    }
+
+    QSharedPointer<ObjectImpl> object = findObject(name).toStrongRef()
+                                        .staticCast<Kpf::ObjectImpl>();
+    if (object)
+    {
+        if (!object->object->property(KEY_ALREADYEXIST.toUtf8().constData())
+            .toString().isEmpty())
+        {
+            return object;
+        }
+        qCWarning(kpf) << "Object create failed for"
+                       << "name" << name
+                       << "with type" << className
+                       << ": object already exists";
         return {};
     }
 
@@ -195,17 +225,16 @@ QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(QString name,
                                           .staticCast<MetaClassImpl>();
     if (!classImpl)
     {
-        kpfCWarning("Kpf") << "Object create failed for"
-                           << "name" << name
-                           << "with type" << className
-                           << ": type unregistered";
+        qCWarning(kpf) << "Object create failed for"
+                       << "name" << name
+                       << "with type" << className
+                       << ": type unregistered";
         return {};
     }
 
     notify(&N::aboutToCreateObject, className, name);
-    QSharedPointer<ObjectImpl> object = ObjectImpl::create(classImpl.staticCast<MetaClass>(),
-                                                           name,
-                                                           objectConfig);
+    object = ObjectImpl::create(classImpl.staticCast<MetaClass>(),
+                                name, objectConfig);
     names.append(name);
     objects.insert(name, object);
 
@@ -213,10 +242,10 @@ QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(QString name,
     classImpl->constructor(object.data());
     if (!object->object)
     {
-        kpfCWarning("Kpf") << "Object create failed for"
-                           << "name" << name
-                           << "with type" << className
-                           << ": construct failed with nullptr returned";
+        qCWarning(kpf) << "Object create failed for"
+                       << "name" << name
+                       << "with type" << className
+                       << ": construct failed with nullptr returned";
         destroyObject(object->name);
         return {};
     }
@@ -248,26 +277,26 @@ QWeakPointer<Kpf::ObjectImpl> Kpf::ObjectManagerImpl::createObject(QString name,
 
     if (!setObjectProperty(object))
     {
-        kpfCWarning("Kpf") << "Object create failed for"
-                           << "name" << name
-                           << "with type" << className
-                           << ": cannote setup properties";
+        qCWarning(kpf) << "Object create failed for"
+                       << "name" << name
+                       << "with type" << className
+                       << ": cannote setup properties";
         destroyObject(object->name);
         return {};
     }
     if (!initObject(object))
     {
-        kpfCWarning("Kpf") << "Object create failed for"
-                           << "name" << name
-                           << "with type" << className
-                           << ": init method return false";
+        qCWarning(kpf) << "Object create failed for"
+                       << "name" << name
+                       << "with type" << className
+                       << ": init method return false";
         destroyObject(object->name);
         return {};
     }
 
-    kpfCInformation("Kpf") << "Object create successed for"
-                           << "name" << name
-                           << "with type" << className;
+    qCInfo(kpf) << "Object create successed for"
+                << "name" << name
+                << "with type" << className;
 
     notify(&N::objectCreated, className, name);
     return object;
@@ -293,6 +322,13 @@ bool Kpf::ObjectManagerImpl::createChildren(const QDomElement& config, QObject* 
         QWidget* w = wParent;
         createObject(config, o, w);
     }
+    return createChildren_withoutObject(config, oParent, wParent);
+}
+
+bool Kpf::ObjectManagerImpl::createChildren_withoutObject(const QDomElement& config, QObject* oParent, QWidget* wParent)
+{
+    QMutexLocker locker(kpfMutex());
+
     for (QDomElement child = config.firstChildElement();
          !child.isNull();
          child = child.nextSiblingElement())
@@ -308,13 +344,14 @@ template<typename T, typename U>
 void setParent(T* obj, U* parent)
 {
     obj->setParent(parent);
-    kpfCLog("Kpf", 1) << "Parent of"
-                      << (std::is_base_of<QWidget, T>::value ? "QWidget" : "QObject")
-                      << obj->objectName()
-                      << "is set to"
-                      << (std::is_base_of<QWidget, U>::value ? "QWidget" : "QObject")
-                      << parent->objectName();
+    qCDebug(kpf) << "Parent of"
+                 << (std::is_base_of<QWidget, T>::value ? "QWidget" : "QObject")
+                 << obj->objectName()
+                 << "is set to"
+                 << (std::is_base_of<QWidget, U>::value ? "QWidget" : "QObject")
+                 << parent->objectName();
 }
+
 void Kpf::ObjectManagerImpl::setObjectParent(QObject* object, const QString& parent, QObject* oParent, QWidget* wParent)
 {
     QMutexLocker locker(kpfMutex());
@@ -379,9 +416,9 @@ bool Kpf::ObjectManagerImpl::setObjectProperty(QSharedPointer<ObjectImpl>& objec
         QString name = attr.name();
         QVariant value = attr.value();
 
-        kpfCLog("Kpf", 1) << "Setup object" << object->name
-                          << "for property" << name
-                          << "value" << value;
+        qCDebug(kpf) << "Setup object" << object->name
+                     << "for property" << name
+                     << "value" << value;
 
         InvokeMethodSyncHelper(objectPtr, [objectPtr, name, value]{
             objectPtr->setProperty(name.toUtf8().constData(), value);
@@ -415,10 +452,8 @@ bool Kpf::ObjectManagerImpl::initObject(QSharedPointer<ObjectImpl>& object)
     bool ret = InvokeMethodSyncHelper(object->object, method)
                .invoke({ QVariant::fromValue(object->config) }, &ok)
                .toBool();
-    if (ok && ret)
-    {
-        kpfCInformation("Kpf") << "Initialize object" << object->name
-                               << "successed";
+    if (ok && ret) {
+        qCInfo(kpf) << "Initialize object" << object->name << "successed";
         return true;
     }
     return false;

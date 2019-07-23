@@ -13,20 +13,27 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-bool MainWindow::init(const QDomElement&)
+bool MainWindow::init(const QDomElement& config)
 {
-    kpfInformation() << "MainWindow: initialized at thread" << QThread::currentThread()
-                     << ",it's belonging thread is" << thread()
-                     << ", main thread is" << qApp->thread();
+    qInfo() << "MainWindow: initialized at thread" << QThread::currentThread()
+            << ",it's belonging thread is" << thread()
+            << ", main thread is" << qApp->thread();
+
+    QDomElement centralWidgetConfig = config.firstChildElement(QStringLiteral("CentralWidget"));
+    QWidget* centralWidget = kpfObject.createObject<QWidget>(centralWidgetConfig, this);
+    if (centralWidget) {
+        setCentralWidget(centralWidget);
+    }
+
     return true;
 }
 
 QString MainWindow::testEvent(QString text)
 {
-    kpfInformation() << "MainWindow: receive testEvent with arg =" << text
-                     << "invoke thread is" << QThread::currentThread()
-                     << "it's belonging thread is" << thread()
-                     << ", main thread is" << qApp->thread();
+    qInfo() << "MainWindow: receive testEvent with arg =" << text
+            << "invoke thread is" << QThread::currentThread()
+            << "it's belonging thread is" << thread()
+            << ", main thread is" << qApp->thread();
     return text;
 }
 

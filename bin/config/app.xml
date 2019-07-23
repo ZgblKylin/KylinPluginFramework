@@ -49,6 +49,7 @@
         Method: 该对象的槽函数，格式与SLot宏内字符串相同
   -->
   <Objects>
+    <Class class="LogDisplayBuffer" name="LogDisplayBuffer"/>
     <Component component="mainWindow" name="mainWindow" windowTitle="Component window">
       <SubEvent slot="setWindowTitle(QString)" topic="Button1Clicked"/>
     </Component>
@@ -63,6 +64,7 @@
             </Class>
             <Class class="QPushButton" name="button2" text="button 2"/>
           </Class>
+          <Class class="LogDisplayWidget"/>
         </Class>
       </CentralWidget>
       <StatusBar/>

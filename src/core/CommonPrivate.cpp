@@ -3,6 +3,12 @@
 #include "KpfCoreImpl.h"
 #include "RegisterQtClasses.h"
 
+const QLoggingCategory& kpf()
+{
+    static const QLoggingCategory category("kpf", QtWarningMsg);
+    return category;
+}
+
 QString normalizedSignature(QString signature)
 {
     if (signature.isEmpty()) {

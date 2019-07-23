@@ -60,10 +60,13 @@ private:
     void atExit();
 
     QMutex mtx;
+
+    QDomDocument appConfig;
     QDomElement rootNode;
     QDomElement objectsNode;
     QDomElement connectionsNode;
     QDomElement initializationsNode;
+    QMap<QString, QDomDocument> componentsConfig;
     QMap<QString, QDomElement> objectsComponentsNode;
     QMap<QString, QDomElement> connectionsComponentsNode;
     QMap<QString, QDomElement> initializationsComponentsNode;

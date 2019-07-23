@@ -145,16 +145,16 @@ void Kpf::EventManagerImpl::addPubEvent(const QString& objectName, const QString
     ObjectEvent* eventObject = object->publishedEvents.value(name);
     if (!eventObject)
     {
-        kpfCWarning("Kpf") << "Add published event for object" << object->name
-                           << "wtih event signature" << name
-                           << "to topic" << topicName
-                           << "failed : cannot find corresponding event";
+        qCWarning(kpf) << "Add published event for object" << object->name
+                       << "wtih event signature" << name
+                       << "to topic" << topicName
+                       << "failed : cannot find corresponding event";
         return;
     }
 
-    kpfCLog("Kpf", 1) << "Add published event for object" << object->name
-                      << "wtih event signature" << name
-                      << "to topic" << topicName;
+    qCDebug(kpf) << "Add published event for object" << object->name
+                 << "wtih event signature" << name
+                 << "to topic" << topicName;
 
     QSharedPointer<TopicImpl> topic = kpfTopicImpl.addTopic(topicName);
     topic->publishedEvents.insert(eventObject);
@@ -183,16 +183,16 @@ void Kpf::EventManagerImpl::addSubEvent(const QString& objectName, const QString
     ObjectEvent* eventObject = object->subscribedEvents.value(name);
     if (!eventObject)
     {
-        kpfCWarning("Kpf") << "Add subscribed event for object" << object->name
-                           << "wtih event signature" << name
-                           << "to topic" << topicName
-                           << "failed : cannot find corresponding event";
+        qCWarning(kpf) << "Add subscribed event for object" << object->name
+                       << "wtih event signature" << name
+                       << "to topic" << topicName
+                       << "failed : cannot find corresponding event";
         return;
     }
 
-    kpfCLog("Kpf", 1) << "Add subscribed event for object" << object->name
-                      << "wtih event signature" << name
-                      << "to topic" << topicName;
+    qCDebug(kpf) << "Add subscribed event for object" << object->name
+                 << "wtih event signature" << name
+                 << "to topic" << topicName;
 
     QSharedPointer<TopicImpl> topic = kpfTopicImpl.addTopic(topicName);
     topic->subscribedEvents.insert(eventObject);

@@ -10,4 +10,3 @@
 #include <Kpf/Topic.h>
 #include <Kpf/Connection.h>
 #include <Kpf/KpfCore.h>
-#include <Kpf/Log.h>

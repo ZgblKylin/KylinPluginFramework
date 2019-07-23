@@ -30,6 +30,7 @@ static const QString KEY_SLOT = QStringLiteral("slot");
 static const QString KEY_TYPE = QStringLiteral("type");
 static const QString KEY_OBJECT = QStringLiteral("object");
 static const QString KEY_METHO = QStringLiteral("method");
+static const QString KEY_ALREADYEXIST = QStringLiteral("alreadyExist");
 
 // 信号槽连接中连接方式对应字符串
 static const QMap<QString, Qt::ConnectionType> ConnectionTypes =

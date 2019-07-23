@@ -2,6 +2,8 @@
 #include <functional>
 #include <Kpf/Kpf.h>
 
+const QLoggingCategory& kpf();
+
 QString normalizedSignature(QString signature);
 QByteArray convertSignalName(QByteArray signal);
 QByteArray convertSlotName(QByteArray slot);
