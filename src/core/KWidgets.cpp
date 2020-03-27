@@ -127,7 +127,7 @@ void addMenuItem(QObject* parent, QDomElement config)
             return;
         }
 
-        QMenu* subMenu = kpfObject.createObject<QMenu>(config, parent);
+        QMenu* subMenu = kpfObject.createObject<QMenu>(config, nullptr);
         if (!subMenu) {
             return;
         }
