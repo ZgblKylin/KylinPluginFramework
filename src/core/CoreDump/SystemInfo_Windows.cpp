@@ -112,7 +112,7 @@ DiskStateList SystemInfoInterface::allDiskState() const
             const char *drive = drives + pos;
             DiskState state = diskState(QString(drive));
             stateList.push_back(state);
-            pos += strlen(drive) + 1;
+            pos += DWORD(strlen(drive)) + 1;
         }
     }
     return stateList;
