@@ -89,8 +89,8 @@ void operator,(T &&value, const ApplyReturnValue<U> &container)
 template<typename Result>
 inline QVariant resultGenerator()
 {
-    QVariant ret(QVariant::Type(qMetaTypeId<Result>()));
-    return ret;
+    int typeId = qMetaTypeId<Result>();
+    return QVariant(QVariant::Type(typeId));
 }
 template<>
 inline QVariant resultGenerator<void>()
