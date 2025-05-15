@@ -3,6 +3,7 @@
 ![Build Status](https://img.shields.io/badge/TODO-appveyor-red.svg)
 ![Coverage Status](https://img.shields.io/badge/TODO-coveralls-red.svg)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/b8371eee6d744b778fb1a74c8368f42c)](https://app.codacy.com/gh/ZgblKylin/KylinPluginFramework?utm_source=github.com&utm_medium=referral&utm_content=ZgblKylin/KylinPluginFramework&utm_campaign=Badge_Grade_Settings)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/ZgblKylin/KylinPluginFramework)
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 [![LICENSE](https://img.shields.io/badge/license-MPL-green.svg)](https://www.mozilla.org/en-US/MPL/)
 [![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
